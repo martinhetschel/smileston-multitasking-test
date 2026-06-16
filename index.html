@@ -132,8 +132,6 @@
             border: 1px solid var(--border);
             border-radius: 4px;
             width: 100%;
-            max-height: 40vh;
-            object-fit: contain;
             margin-bottom: 15px;
             flex-shrink: 0;
         }
@@ -389,6 +387,13 @@
     const COLS = 3;
     const START_ROW = 5;
 
+    // Sichtbares Zeilenfenster: statt aller 15 Zeilen werden nur ~11 auf einmal
+    // gezeigt (deutlich größere Zellen), das Fenster scrollt der aktiven Zeile
+    // nach und hält dabei einige bereits ausgefüllte Zeilen zur Orientierung sichtbar.
+    const WINDOW_BEFORE = 6;
+    const WINDOW_AFTER = 4;
+    const WINDOW_ROWS = WINDOW_BEFORE + 1 + WINDOW_AFTER;
+
     // Die exakt benötigten Tasten (10 Zahlen, 10 Buchstaben, 4 Symbole = 24 Tasten)
     const REQUIRED_NUMBERS = ['6','7','8','9','10','11','12','13','14','15'];
     const REQUIRED_LETTERS = ['F','G','H','I','J','K','L','M','N','O'];
@@ -406,6 +411,8 @@
     let timePhase1 = 0;
     let timePhase2 = 0;
     let inputLocked = false;
+    let windowStart = 0;
+    let scrollAnimFrame = null;
 
     const canvas = document.getElementById('gridCanvas');
     const ctx = canvas.getContext('2d');
@@ -465,11 +472,14 @@
         startTime = performance.now();
     }
 
-    function drawGrid() {
+    // Zeichnet das Raster mit fixer Kopfzeile und einem scrollbaren Datenbereich.
+    // scrollPos ist die (ggf. gebrochene) Zeilennummer, die ganz oben im
+    // Datenbereich steht - gebrochene Werte entstehen während der Scroll-Animation.
+    function renderGridAt(scrollPos) {
         const w = canvas.width / (window.devicePixelRatio || 1);
         const h = canvas.height / (window.devicePixelRatio || 1);
         const cellW = w / COLS;
-        const cellH = h / (ROWS + 1);
+        const cellH = h / (WINDOW_ROWS + 1);
 
         ctx.clearRect(0, 0, w, h);
 
@@ -490,10 +500,19 @@
         ctx.lineWidth = 2;
         ctx.stroke();
 
+        // Datenzeilen unterhalb der Kopfzeile auf den sichtbaren Bereich clippen,
+        // damit das Scrollen wie ein Fenster wirkt statt das Raster zu verzerren.
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, cellH, w, h - cellH);
+        ctx.clip();
+
         for (let r = 0; r < ROWS; r++) {
+            const y = cellH + (r - scrollPos) * cellH;
+            if (y + cellH < cellH || y > h) continue;
+
             for (let c = 0; c < COLS; c++) {
                 const x = c * cellW;
-                const y = (r + 1) * cellH;
 
                 ctx.beginPath();
                 ctx.moveTo(x, y + cellH);
@@ -521,6 +540,51 @@
                 }
             }
         }
+
+        ctx.restore();
+    }
+
+    // Zielposition des Fensters: WINDOW_BEFORE Zeilen vor der aktiven Zeile,
+    // an den Rändern des Rasters geclamped.
+    function getTargetWindowStart() {
+        return Math.max(0, Math.min(activeRow - WINDOW_BEFORE, ROWS - WINDOW_ROWS));
+    }
+
+    // Sofortiges Zeichnen ohne Animation (Start, Resize, Phasenende).
+    function drawGrid() {
+        windowStart = getTargetWindowStart();
+        renderGridAt(windowStart);
+    }
+
+    // Scrollt sanft zur neuen Fensterposition, falls sich die aktive Zeile
+    // weit genug vom aktuellen Ausschnitt entfernt hat.
+    function scrollGridIntoView() {
+        const target = getTargetWindowStart();
+        if (target === windowStart) {
+            renderGridAt(windowStart);
+            return;
+        }
+
+        if (scrollAnimFrame) cancelAnimationFrame(scrollAnimFrame);
+        const from = windowStart;
+        const duration = 220;
+        const start = performance.now();
+
+        function step(now) {
+            const t = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - t, 3);
+            windowStart = from + (target - from) * eased;
+            renderGridAt(windowStart);
+
+            if (t < 1) {
+                scrollAnimFrame = requestAnimationFrame(step);
+            } else {
+                windowStart = target;
+                renderGridAt(windowStart);
+                scrollAnimFrame = null;
+            }
+        }
+        scrollAnimFrame = requestAnimationFrame(step);
     }
 
     function shuffle(array) {
@@ -616,7 +680,7 @@
             (currentPhase === 2 && activeCol >= COLS)) {
             finishPhase();
         } else {
-            drawGrid();
+            scrollGridIntoView();
 
             // Wenn in Phase 2 eine Spalte beendet wurde (aber noch nicht das ganze Spiel)
             if (currentPhase === 2 && columnFinishedPhase2 && activeCol < COLS) {
