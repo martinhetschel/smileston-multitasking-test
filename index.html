@@ -32,6 +32,7 @@
             flex-direction: column;
             align-items: center;
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
         }
 
@@ -145,7 +146,7 @@
             justify-content: center;
             width: 100%;
             margin-top: auto;
-            padding-bottom: 10px;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
         }
 
         .key {
@@ -416,11 +417,16 @@
     function initCanvas() {
         const dpr = window.devicePixelRatio || 1;
         const rect = canvas.parentElement.getBoundingClientRect();
+        // Tastatur hat Vorrang: Canvas bekommt nur die Höhe, die nach Abzug der
+        // Tastatur (inkl. ihres Abstands) noch übrig ist, damit sie auf kleinen
+        // Bildschirmen nie unten abgeschnitten wird.
+        const availableHeight = rect.height - keyboardEl.offsetHeight;
+        const targetHeight = Math.max(availableHeight, 80);
         canvas.width = rect.width * dpr;
-        canvas.height = (rect.height * 0.45) * dpr;
+        canvas.height = targetHeight * dpr;
         ctx.scale(dpr, dpr);
         canvas.style.width = `${rect.width}px`;
-        canvas.style.height = `${rect.height * 0.45}px`;
+        canvas.style.height = `${targetHeight}px`;
     }
 
     function showScreen(id) {
@@ -449,11 +455,12 @@
         inputLocked = false;
 
         showScreen('game-screen');
+
+        // Tastatur nur EINMAL pro Phase aufbauen und mischen (vor initCanvas,
+        // damit deren Höhe bei der Canvas-Berechnung schon feststeht)
+        buildStaticKeyboard();
         initCanvas();
         drawGrid();
-
-        // Tastatur nur EINMAL pro Phase aufbauen und mischen
-        buildStaticKeyboard();
 
         startTime = performance.now();
     }
@@ -671,12 +678,17 @@
         }
     }
 
-    window.addEventListener('resize', () => {
+    function handleViewportResize() {
         if(document.getElementById('game-screen').classList.contains('active')) {
             initCanvas();
             drawGrid();
         }
-    });
+    }
+
+    window.addEventListener('resize', handleViewportResize);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleViewportResize);
+    }
 </script>
 </body>
 </html>
