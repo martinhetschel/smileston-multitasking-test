@@ -96,7 +96,7 @@
         }
 
         p {
-            font-size: 0.95rem;
+            font-size: 1.05rem;
             margin-bottom: 20px;
             line-height: 1.5;
             color: var(--text);
@@ -298,7 +298,7 @@
         .highlight-red { color: var(--error); font-weight: bold; }
 
         .hint {
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             color: #777;
             font-style: italic;
             background: #f9f9f9;
@@ -448,6 +448,7 @@
         <div id="end-screen" class="screen">
             <h1>Auswertung</h1>
             <div id="stats">
+                <div class="stat-row"><span>Modus:</span> <strong id="statMode">Standard</strong></div>
                 <div class="stat-row"><span>Runde 1 (Zeilen):</span> <strong id="time1">0.0 s</strong></div>
                 <div class="stat-row"><span>Runde 2 (Spalten):</span> <strong id="time2">0.0 s</strong></div>
                 <div class="stat-row" style="margin-top: 10px; border-top: 2px solid var(--anthracite); padding-top: 10px;">
@@ -813,6 +814,8 @@
         } else {
             timePhase2 = duration;
 
+            const modeLabel = gameMode === 'hardcore' ? 'Hardcore' : 'Standard';
+            document.getElementById('statMode').innerText = modeLabel;
             document.getElementById('time1').innerText = timePhase1.toFixed(1) + ' s';
             document.getElementById('time2').innerText = timePhase2.toFixed(1) + ' s';
 
@@ -823,22 +826,26 @@
 
             // Share Text generieren
             let shareText = `Ich habe den Smilestone Konzentrationstest gemacht und folgendes Ergebnis erzielt:\n\n`;
+            shareText += `Modus: ${modeLabel}\n`;
 
             if(timePhase1 > timePhase2) {
                 diffEl.innerText = `${diffAbs} s (${diffPercent}%) schneller!`;
                 diffEl.className = 'highlight-green';
+                shareText += `Zeitersparnis: ${diffAbs} s (${diffPercent}%)\n`;
                 shareText += `Im Flow (spaltenweise) war ich ${diffPercent}% schneller! 🚀\n`;
             } else if (timePhase1 < timePhase2) {
                 diffEl.innerText = `${Math.abs(diffAbs)} s (${Math.abs(diffPercent)}%) langsamer`;
                 diffEl.className = 'highlight-red';
+                shareText += `Zeitersparnis: ${Math.abs(diffAbs)} s (${Math.abs(diffPercent)}%) langsamer\n`;
                 shareText += `Ich war zeilenweise sogar ${Math.abs(diffPercent)}% schneller. Mein Gehirn ist ein Multitasking-Wunder! 🤯\n`;
             } else {
                 diffEl.innerText = `Gleich schnell (0%)`;
                 diffEl.className = '';
+                shareText += `Zeitersparnis: 0 s (0%)\n`;
                 shareText += `Ich war in beiden Runden exakt gleich schnell! ⚖️\n`;
             }
 
-            shareText += `\nVersuche es doch auch: https://smilestone.de/Multitasking`;
+            shareText += `\nVersuche es doch auch: ${window.location.origin}${window.location.pathname}`;
 
             // Share Links befüllen
             document.getElementById('share-wa').href = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
