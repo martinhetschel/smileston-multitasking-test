@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smilestone Multitasking Test</title>
+    <style>
+        :root {
+            --primary: #333333;
+            --primary-light: #f5f5f5;
+            --accent: #555555;
+            --bg: #e9ecef;
+            --text: #222222;
+            --border: #cccccc;
+            --success: #2e7d32;
+            --success-light: #d4edda;
+            --error: #c62828;
+            --wa-color: #25D366;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 500px;
+            height: 100%;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 2px solid var(--primary-light);
+            flex-shrink: 0;
+        }
+
+        header a {
+            text-decoration: none;
+            display: flex;
+            transition: opacity 0.2s ease;
+        }
+
+        header a:hover { opacity: 0.7; }
+
+        .content-area {
+            flex-grow: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .screen.active { display: flex; }
+
+        h1 {
+            font-size: 1.3rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            color: var(--accent);
+        }
+
+        button.btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 320px;
+            transition: background-color 0.2s, transform 0.1s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button.btn:hover { background-color: #111; }
+        button.btn:active { transform: scale(0.98); }
+
+        #game-area {
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        canvas {
+            background-color: white;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            width: 100%;
+            max-height: 40vh;
+            object-fit: contain;
+            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+
+        /* Statische 24-Tasten Tastatur */
+        #keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            width: 100%;
+            margin-top: auto;
+            padding-bottom: 10px;
+        }
+
+        .key {
+            background-color: var(--primary-light);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            width: calc(20% - 6px);
+            height: 48px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+            transition: background-color 0.1s, border-color 0.1s;
+        }
+
+        .key:active {
+            background-color: #e0e0e0;
+            border-color: var(--accent);
+        }
+
+        /* Falsche Eingabe */
+        .key.wrong {
+            animation: shake 0.3s;
+            background-color: #ffebee;
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        /* Richtige Eingabe (pulsieren, bleibt sichtbar) */
+        .key.pop-pulse {
+            animation: popPulse 0.3s forwards;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes popPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); background-color: var(--success-light); border-color: var(--success); color: var(--success); }
+            100% { transform: scale(1); background-color: var(--primary-light); }
+        }
+
+        /* --- Overlays (Error & Success) --- */
+        #error-overlay, #success-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.1s ease-in-out, visibility 0.1s;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #error-overlay { background-color: rgba(198, 40, 40, 0.9); }
+        #success-overlay { background-color: rgba(46, 125, 50, 0.95); }
+
+        #error-overlay.flash, #success-overlay.flash {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #error-overlay span {
+            color: white;
+            font-size: 6rem;
+            font-weight: bold;
+            transform: scale(0.5);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #success-overlay span {
+            color: white;
+            font-size: 2.2rem;
+            font-weight: bold;
+            transform: scale(0.5);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #error-overlay.flash span, #success-overlay.flash span {
+            transform: scale(1);
+        }
+
+        /* Stats & Share */
+        #stats {
+            width: 100%;
+            text-align: left;
+            background: var(--primary-light);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .stat-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .highlight-green { color: var(--success); font-weight: bold; }
+        .highlight-red { color: var(--error); font-weight: bold; }
+
+        .hint {
+            font-size: 0.85rem;
+            color: #777;
+            font-style: italic;
+            background: #f9f9f9;
+            padding: 10px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 320px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        .btn-share {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            border-radius: 4px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: opacity 0.2s;
+        }
+
+        .btn-share:hover { opacity: 0.85; }
+        .btn-share svg { margin-right: 8px; width: 18px; height: 18px; fill: currentColor; }
+        .btn-wa { background-color: var(--wa-color); }
+        .btn-mail { background-color: var(--accent); }
+
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <div id="error-overlay">
+        <span>✖</span>
+    </div>
+    <div id="success-overlay">
+        <span id="success-text">✔</span>
+    </div>
+
+    <header>
+        <a href="https://www.smilestone.de/" target="_blank" rel="noopener noreferrer" title="Zur Smilestone Website">
+            <svg viewBox="0 0 280 60" width="200" height="42" xmlns="http://www.w3.org/2000/svg">
+                <g transform="translate(0, 10)">
+                    <rect x="0" y="0" width="40" height="40" rx="6" fill="none" stroke="#333" stroke-width="2.5"/>
+                    <path d="M 26 12 L 14 12 C 11 12 9 14 9 17 C 9 20 11 22 14 22 L 26 22 C 29 22 31 24 31 27 C 31 30 29 32 26 32 L 14 32" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+                </g>
+                <text x="50" y="32" font-family="'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="22" fill="#333" letter-spacing="0.5">SMILESTONE</text>
+                <text x="52" y="48" font-family="'Helvetica Neue', Arial, sans-serif" font-weight="bold" font-size="10" fill="#666" letter-spacing="1.5">GEMEINSAM BESSER</text>
+            </svg>
+        </a>
+    </header>
+
+    <div class="content-area">
+        <div id="start-screen" class="screen active">
+            <h1>Auf die Plätze, fertig, los!</h1>
+            <p><strong>Runde 1: Zeilenweise (Multitasking)</strong><br><br>
+            Füllen Sie das Raster <strong>Zeile für Zeile</strong> aus (von links nach rechts). Die Tastatur bleibt dabei starr.</p>
+
+            <p class="hint">Die ersten 5 Zeilen sind bereits als Orientierungshilfe vorausgefüllt. Sie starten in Zeile 6.</p>
+
+            <button class="btn" onclick="startGame(1)">Phase 1 starten</button>
+        </div>
+
+        <div id="transition-screen" class="screen">
+            <h1>Phase 1 beendet</h1>
+            <p>Ihre Zeit wurde erfasst.<br><br>
+            <strong>Runde 2: Spaltenweise (Flow)</strong><br><br>
+            Füllen Sie das Raster nun <strong>Spalte für Spalte</strong> aus (von oben nach unten). Zuerst alle Zahlen, dann die Buchstaben, zuletzt die Symbole.</p>
+
+            <button class="btn" onclick="startGame(2)">Phase 2 starten</button>
+        </div>
+
+        <div id="game-screen" class="screen" style="justify-content: flex-start;">
+            <canvas id="gridCanvas"></canvas>
+            <div id="keyboard"></div>
+        </div>
+
+        <div id="end-screen" class="screen">
+            <h1>Auswertung</h1>
+            <div id="stats">
+                <div class="stat-row"><span>Runde 1 (Zeilen):</span> <strong id="time1">0.0 s</strong></div>
+                <div class="stat-row"><span>Runde 2 (Spalten):</span> <strong id="time2">0.0 s</strong></div>
+                <div class="stat-row" style="margin-top: 10px; border-top: 2px solid #333; padding-top: 10px;">
+                    <span>Zeitersparnis:</span> <strong id="diff">0.0 s (0%)</strong>
+                </div>
+            </div>
+
+            <div class="share-buttons">
+                <a href="#" id="share-wa" class="btn-share btn-wa" target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                    WhatsApp
+                </a>
+                <a href="#" id="share-mail" class="btn-share btn-mail">
+                    <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                    E-Mail
+                </a>
+            </div>
+
+            <button class="btn" style="background-color: var(--primary-light); color: var(--primary); border: 2px solid var(--primary);" onclick="location.reload()">Neuer Versuch</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ROWS = 15;
+    const COLS = 3;
+    const START_ROW = 5;
+
+    // Die exakt benötigten Tasten (10 Zahlen, 10 Buchstaben, 4 Symbole = 24 Tasten)
+    const REQUIRED_NUMBERS = ['6','7','8','9','10','11','12','13','14','15'];
+    const REQUIRED_LETTERS = ['F','G','H','I','J','K','L','M','N','O'];
+    const REQUIRED_EMOJIS = ['🔲', '🔷', '🔴', '🔺'];
+
+    // Arrays für korrekte Zuweisung in der Logik
+    const LETTERS_FULL = ['A','B','C','D','E', ...REQUIRED_LETTERS];
+    const EMOJIS_PATTERN = ['🔲', '🔷', '🔴', '🔺'];
+
+    let currentPhase = 1;
+    let gridData = [];
+    let activeRow = START_ROW;
+    let activeCol = 0;
+    let startTime = 0;
+    let timePhase1 = 0;
+    let timePhase2 = 0;
+    let inputLocked = false;
+
+    const canvas = document.getElementById('gridCanvas');
+    const ctx = canvas.getContext('2d');
+    const keyboardEl = document.getElementById('keyboard');
+    const errorOverlay = document.getElementById('error-overlay');
+    const successOverlay = document.getElementById('success-overlay');
+    const successText = document.getElementById('success-text');
+
+    function initCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = (rect.height * 0.45) * dpr;
+        ctx.scale(dpr, dpr);
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height * 0.45}px`;
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function getExpectedValue(row, col) {
+        if (col === 0) return (row + 1).toString();
+        if (col === 1) return LETTERS_FULL[row];
+        if (col === 2) return EMOJIS_PATTERN[row % 4];
+    }
+
+    function startGame(phase) {
+        currentPhase = phase;
+
+        gridData = Array(ROWS).fill().map(() => Array(COLS).fill(''));
+        for(let r = 0; r < START_ROW; r++) {
+            gridData[r][0] = getExpectedValue(r, 0);
+            gridData[r][1] = getExpectedValue(r, 1);
+            gridData[r][2] = getExpectedValue(r, 2);
+        }
+
+        activeRow = START_ROW;
+        activeCol = 0;
+        inputLocked = false;
+
+        showScreen('game-screen');
+        initCanvas();
+        drawGrid();
+
+        // Tastatur nur EINMAL pro Phase aufbauen und mischen
+        buildStaticKeyboard();
+
+        startTime = performance.now();
+    }
+
+    function drawGrid() {
+        const w = canvas.width / (window.devicePixelRatio || 1);
+        const h = canvas.height / (window.devicePixelRatio || 1);
+        const cellW = w / COLS;
+        const cellH = h / (ROWS + 1);
+
+        ctx.clearRect(0, 0, w, h);
+
+        ctx.fillStyle = '#f5f5f5';
+        ctx.fillRect(0, 0, w, cellH);
+        ctx.fillStyle = '#333';
+        ctx.font = `bold ${cellH * 0.4}px 'Helvetica Neue', Arial, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Aufgabe A', cellW * 0.5, cellH * 0.5);
+        ctx.fillText('Aufgabe B', cellW * 1.5, cellH * 0.5);
+        ctx.fillText('Aufgabe C', cellW * 2.5, cellH * 0.5);
+
+        ctx.beginPath();
+        ctx.moveTo(0, cellH);
+        ctx.lineTo(w, cellH);
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const x = c * cellW;
+                const y = (r + 1) * cellH;
+
+                ctx.beginPath();
+                ctx.moveTo(x, y + cellH);
+                ctx.lineTo(x + cellW, y + cellH);
+                ctx.strokeStyle = '#eee';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                if (r === activeRow && c === activeCol) {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                    ctx.fillRect(x, y, cellW, cellH);
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x+2, y+2, cellW-4, cellH-4);
+                }
+
+                if (gridData[r][c]) {
+                    ctx.fillStyle = (r < START_ROW) ? '#999' : '#111';
+                    if (c === 2) {
+                        ctx.font = `${cellH * 0.5}px Arial`;
+                    } else {
+                        ctx.font = (r < START_ROW) ? `${cellH * 0.5}px 'Helvetica Neue', Arial, sans-serif` : `bold ${cellH * 0.55}px 'Helvetica Neue', Arial, sans-serif`;
+                    }
+                    ctx.fillText(gridData[r][c], x + cellW * 0.5, y + cellH * 0.55);
+                }
+            }
+        }
+    }
+
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    // Erstellt EINE feste Tastatur mit 24 wild gemischten Tasten
+    function buildStaticKeyboard() {
+        keyboardEl.innerHTML = '';
+
+        let allKeys = [...REQUIRED_NUMBERS, ...REQUIRED_LETTERS, ...REQUIRED_EMOJIS];
+        shuffle(allKeys);
+
+        allKeys.forEach(keyVal => {
+            const btn = document.createElement('div');
+            btn.className = 'key';
+            btn.innerText = keyVal;
+
+            btn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                handleKeyPress(keyVal, btn);
+            });
+            btn.addEventListener('mousedown', (e) => {
+                if (e.pointerType !== 'touch') {
+                     handleKeyPress(keyVal, btn);
+                }
+            });
+            keyboardEl.appendChild(btn);
+        });
+    }
+
+    function handleKeyPress(val, btnElement) {
+        if (inputLocked) return;
+
+        const expected = getExpectedValue(activeRow, activeCol);
+
+        if (val === expected) {
+            gridData[activeRow][activeCol] = val;
+
+            btnElement.classList.remove('pop-pulse');
+            void btnElement.offsetWidth;
+            btnElement.classList.add('pop-pulse');
+
+            advanceCursor();
+        } else {
+            inputLocked = true;
+            errorOverlay.classList.add('flash');
+
+            setTimeout(() => {
+                errorOverlay.classList.remove('flash');
+                inputLocked = false;
+            }, 500);
+        }
+    }
+
+    function triggerSuccessOverlay(colIndex) {
+        inputLocked = true;
+
+        if (colIndex === 1) {
+            successText.innerText = "✔ Zahlen fertig!";
+        } else if (colIndex === 2) {
+            successText.innerText = "✔ Buchstaben fertig!";
+        }
+
+        successOverlay.classList.add('flash');
+
+        setTimeout(() => {
+            successOverlay.classList.remove('flash');
+            inputLocked = false;
+        }, 700); // 0.7 Sekunden anzeigen, damit man es gut lesen kann
+    }
+
+    function advanceCursor() {
+        let columnFinishedPhase2 = false;
+
+        if (currentPhase === 1) {
+            activeCol++;
+            if (activeCol >= COLS) {
+                activeCol = 0;
+                activeRow++;
+            }
+        } else {
+            activeRow++;
+            if (activeRow >= ROWS) {
+                activeRow = START_ROW;
+                activeCol++;
+                columnFinishedPhase2 = true; // Markiere Spaltenwechsel
+            }
+        }
+
+        if ((currentPhase === 1 && activeRow >= ROWS) ||
+            (currentPhase === 2 && activeCol >= COLS)) {
+            finishPhase();
+        } else {
+            drawGrid();
+
+            // Wenn in Phase 2 eine Spalte beendet wurde (aber noch nicht das ganze Spiel)
+            if (currentPhase === 2 && columnFinishedPhase2 && activeCol < COLS) {
+                triggerSuccessOverlay(activeCol);
+            }
+        }
+    }
+
+    function finishPhase() {
+        drawGrid();
+        keyboardEl.innerHTML = '';
+
+        const endTime = performance.now();
+        const duration = ((endTime - startTime) / 1000);
+
+        if (currentPhase === 1) {
+            timePhase1 = duration;
+            setTimeout(() => showScreen('transition-screen'), 500);
+        } else {
+            timePhase2 = duration;
+
+            document.getElementById('time1').innerText = timePhase1.toFixed(1) + ' s';
+            document.getElementById('time2').innerText = timePhase2.toFixed(1) + ' s';
+
+            const diffAbs = (timePhase1 - timePhase2).toFixed(1);
+            const diffPercent = (((timePhase1 - timePhase2) / timePhase1) * 100).toFixed(1);
+
+            const diffEl = document.getElementById('diff');
+
+            // Share Text generieren
+            let shareText = `Ich habe den Smilestone Konzentrationstest gemacht und folgendes Ergebnis erzielt:\n\n`;
+
+            if(timePhase1 > timePhase2) {
+                diffEl.innerText = `${diffAbs} s (${diffPercent}%) schneller!`;
+                diffEl.className = 'highlight-green';
+                shareText += `Im Flow (spaltenweise) war ich ${diffPercent}% schneller! 🚀\n`;
+            } else if (timePhase1 < timePhase2) {
+                diffEl.innerText = `${Math.abs(diffAbs)} s (${Math.abs(diffPercent)}%) langsamer`;
+                diffEl.className = 'highlight-red';
+                shareText += `Ich war zeilenweise sogar ${Math.abs(diffPercent)}% schneller. Mein Gehirn ist ein Multitasking-Wunder! 🤯\n`;
+            } else {
+                diffEl.innerText = `Gleich schnell (0%)`;
+                diffEl.className = '';
+                shareText += `Ich war in beiden Runden exakt gleich schnell! ⚖️\n`;
+            }
+
+            shareText += `\nVersuche es doch auch: https://smilestone.de/Multitasking`;
+
+            // Share Links befüllen
+            document.getElementById('share-wa').href = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+            document.getElementById('share-mail').href = `mailto:?subject=${encodeURIComponent("Smilestone Konzentrationstest")}&body=${encodeURIComponent(shareText)}`;
+
+            setTimeout(() => showScreen('end-screen'), 500);
+        }
+    }
+
+    window.addEventListener('resize', () => {
+        if(document.getElementById('game-screen').classList.contains('active')) {
+            initCanvas();
+            drawGrid();
+        }
+    });
+</script>
+</body>
+</html>
