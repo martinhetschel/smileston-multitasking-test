@@ -120,6 +120,32 @@
         button.btn:hover { background-color: #000; }
         button.btn:active { transform: scale(0.98); }
 
+        .mode-selector {
+            display: flex;
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 10px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            background-color: var(--bg);
+            color: var(--anthracite);
+            border: 2px solid var(--anthracite);
+            padding: 14px 10px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.15s, color 0.15s;
+        }
+
+        .mode-btn + .mode-btn { border-left: none; }
+
+        .mode-btn.active {
+            background-color: var(--anthracite);
+            color: var(--yellow);
+        }
+
         #game-area {
             width: 100%;
             flex-grow: 1;
@@ -397,6 +423,11 @@
 
             <p class="hint">Die ersten 5 Zeilen sind bereits als Orientierungshilfe vorausgefüllt. Sie starten in Zeile 6.</p>
 
+            <div class="mode-selector">
+                <button type="button" class="mode-btn active" data-mode="standard" onclick="selectMode('standard')">Standard</button>
+                <button type="button" class="mode-btn" data-mode="hardcore" onclick="selectMode('hardcore')">Hardcore</button>
+            </div>
+
             <button class="btn" onclick="startGame(1)">Phase 1 starten</button>
         </div>
 
@@ -454,12 +485,29 @@
 
     // Die exakt benötigten Tasten (10 Zahlen, 10 Buchstaben, 4 Symbole = 24 Tasten)
     const REQUIRED_NUMBERS = ['6','7','8','9','10','11','12','13','14','15'];
-    const REQUIRED_LETTERS = ['F','G','H','I','J','K','L','M','N','O'];
     const REQUIRED_EMOJIS = ['🔲', '🔷', '🔴', '🔺'];
-
-    // Arrays für korrekte Zuweisung in der Logik
-    const LETTERS_FULL = ['A','B','C','D','E', ...REQUIRED_LETTERS];
     const EMOJIS_PATTERN = ['🔲', '🔷', '🔴', '🔺'];
+
+    // Standard: A-O aufsteigend. Hardcore: Z absteigend (Z,Y,X,...,L).
+    function buildLettersFull(mode) {
+        const letters = [];
+        for (let i = 0; i < ROWS; i++) {
+            const code = mode === 'hardcore' ? (90 - i) : (65 + i);
+            letters.push(String.fromCharCode(code));
+        }
+        return letters;
+    }
+
+    let gameMode = 'standard';
+    let LETTERS_FULL = [];
+    let REQUIRED_LETTERS = [];
+
+    function selectMode(mode) {
+        gameMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+    }
 
     let currentPhase = 1;
     let gridData = [];
@@ -507,6 +555,11 @@
 
     function startGame(phase) {
         currentPhase = phase;
+
+        if (phase === 1) {
+            LETTERS_FULL = buildLettersFull(gameMode);
+            REQUIRED_LETTERS = LETTERS_FULL.slice(START_ROW);
+        }
 
         gridData = Array(ROWS).fill().map(() => Array(COLS).fill(''));
         for(let r = 0; r < START_ROW; r++) {
