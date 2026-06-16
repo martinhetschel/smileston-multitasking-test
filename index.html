@@ -551,6 +551,7 @@
                 <button type="button" class="mode-btn active" data-mode="standard" onclick="selectMode('standard')">Standard</button>
                 <button type="button" class="mode-btn" data-mode="hardcore" onclick="selectMode('hardcore')">Hardcore</button>
             </div>
+            <p class="toggle-hint">Hardcore: Eingabe der Zeichen in umgekehrter Reihenfolge (von unten nach oben).</p>
 
             <div class="mode-selector">
                 <button type="button" class="mode-btn active" data-fives="off" onclick="selectFiveS('off')">Ohne 5S</button>
@@ -1085,6 +1086,9 @@
             let explainText = 'Warum waren Sie in Phase 2 so viel schneller? Multitasking kostet enorme Energie, da das Gehirn ständig "umrüsten" muss.';
             if (is5sMode) {
                 explainText += ' Zusätzlich haben wir in Runde 2 die 5S-Methode angewendet: Sie hatten nur die Werkzeuge vor sich, die Sie im Moment wirklich brauchten. Visueller Ballast war ausgeblendet. Kein Suchen, kein Ablenken – nur reiner Fokus.';
+            }
+            if (gameMode === 'hardcore') {
+                explainText += ' Sie haben diese Runde unter erschwerten Bedingungen absolviert (umgekehrte Reihenfolge). In der Arbeitsrealität steht dies für fehlende Standards oder schlechte Ergonomie. Wie Sie soeben am eigenen Leib gespürt haben: Ungewöhnliche und umständliche Arbeitsabläufe verzögern den Prozess deutlich und zwingen das Gehirn zu unnötiger Zusatzarbeit.';
             }
             document.getElementById('explainText').innerText = explainText;
 
