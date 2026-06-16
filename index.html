@@ -146,6 +146,15 @@
             color: var(--yellow);
         }
 
+        .toggle-hint {
+            font-size: 0.8rem;
+            color: #777;
+            font-style: italic;
+            margin-top: -4px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
         #game-area {
             width: 100%;
             flex-grow: 1;
@@ -196,6 +205,14 @@
         .key:active {
             background-color: var(--yellow);
             border-color: var(--anthracite);
+        }
+
+        .key.disabled {
+            opacity: 0.3;
+            background-color: var(--panel);
+            color: #ccc;
+            border-color: #ccc;
+            pointer-events: none;
         }
 
         /* Falsche Eingabe */
@@ -428,6 +445,12 @@
                 <button type="button" class="mode-btn" data-mode="hardcore" onclick="selectMode('hardcore')">Hardcore</button>
             </div>
 
+            <div class="mode-selector">
+                <button type="button" class="mode-btn active" data-fives="off" onclick="selectFiveS('off')">Ohne 5S</button>
+                <button type="button" class="mode-btn" data-fives="on" onclick="selectFiveS('on')">Mit 5S</button>
+            </div>
+            <p class="toggle-hint">Blendet in Phase 2 nicht benötigte Werkzeuge aus.</p>
+
             <button class="btn" onclick="startGame(1)">Phase 1 starten</button>
         </div>
 
@@ -455,6 +478,8 @@
                     <span>Zeitersparnis:</span> <strong id="diff">0.0 s (0%)</strong>
                 </div>
             </div>
+
+            <p class="hint" id="explainText" style="margin-bottom: 15px;"></p>
 
             <div class="share-buttons">
                 <a href="#" id="share-wa" class="btn-share btn-wa" target="_blank" rel="noopener noreferrer">
@@ -500,13 +525,21 @@
     }
 
     let gameMode = 'standard';
+    let is5sMode = false;
     let LETTERS_FULL = [];
     let REQUIRED_LETTERS = [];
 
     function selectMode(mode) {
         gameMode = mode;
-        document.querySelectorAll('.mode-btn').forEach(btn => {
+        document.querySelectorAll('.mode-btn[data-mode]').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+    }
+
+    function selectFiveS(value) {
+        is5sMode = value === 'on';
+        document.querySelectorAll('.mode-btn[data-fives]').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.fives === value);
         });
     }
 
@@ -578,6 +611,9 @@
         // Tastatur nur EINMAL pro Phase aufbauen und mischen (vor initCanvas,
         // damit deren Höhe bei der Canvas-Berechnung schon feststeht)
         buildStaticKeyboard();
+        if (phase === 2 && is5sMode) {
+            updateKeyboardFor5S();
+        }
         initCanvas();
         drawGrid();
 
@@ -729,6 +765,17 @@
         });
     }
 
+    // 5S: in Phase 2 sind nur die Tasten der aktuellen Spalte (Zahlen/Buchstaben/
+    // Symbole) aktiv, der Rest wird ausgegraut und gesperrt (pointer-events: none).
+    function updateKeyboardFor5S() {
+        const neededSets = [REQUIRED_NUMBERS, REQUIRED_LETTERS, REQUIRED_EMOJIS];
+        const needed = neededSets[activeCol];
+
+        keyboardEl.querySelectorAll('.key').forEach(btn => {
+            btn.classList.toggle('disabled', !needed.includes(btn.innerText));
+        });
+    }
+
     function handleKeyPress(val, btnElement) {
         if (inputLocked) return;
 
@@ -796,6 +843,9 @@
 
             // Wenn in Phase 2 eine Spalte beendet wurde (aber noch nicht das ganze Spiel)
             if (currentPhase === 2 && columnFinishedPhase2 && activeCol < COLS) {
+                if (is5sMode) {
+                    updateKeyboardFor5S();
+                }
                 triggerSuccessOverlay(activeCol);
             }
         }
@@ -814,8 +864,15 @@
         } else {
             timePhase2 = duration;
 
-            const modeLabel = gameMode === 'hardcore' ? 'Hardcore' : 'Standard';
+            const modeLabel = (gameMode === 'hardcore' ? 'Hardcore' : 'Standard') + (is5sMode ? ' + 5S' : '');
             document.getElementById('statMode').innerText = modeLabel;
+
+            let explainText = 'Warum waren Sie in Phase 2 so viel schneller? Multitasking kostet enorme Energie, da das Gehirn ständig "umrüsten" muss.';
+            if (is5sMode) {
+                explainText += ' Zusätzlich haben wir in Runde 2 die 5S-Methode angewendet: Sie hatten nur die Werkzeuge vor sich, die Sie im Moment wirklich brauchten. Visueller Ballast war ausgeblendet. Kein Suchen, kein Ablenken – nur reiner Fokus.';
+            }
+            document.getElementById('explainText').innerText = explainText;
+
             document.getElementById('time1').innerText = timePhase1.toFixed(1) + ' s';
             document.getElementById('time2').innerText = timePhase2.toFixed(1) + ' s';
 
