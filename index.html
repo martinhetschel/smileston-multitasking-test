@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#2D2D2D">
+    <meta name="theme-color" content="#FFB700">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MT-Test">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <title>Smilestone Multitasking Test</title>
     <style>
         :root {
@@ -493,6 +499,47 @@
             animation: pickLight 0.9s ease-in-out infinite;
         }
 
+        /* PWA Install Toast */
+        #pwa-toast {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 340px;
+            background: var(--anthracite);
+            color: #fff;
+            border-radius: 12px;
+            padding: 14px 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 9999;
+            font-size: 0.9rem;
+            display: none;
+            align-items: center;
+            gap: 12px;
+        }
+        #pwa-toast.visible { display: flex; }
+        #pwa-toast p { margin: 0; flex: 1; line-height: 1.4; }
+        #pwa-toast button {
+            background: var(--yellow);
+            color: var(--anthracite);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        #pwa-dismiss {
+            background: transparent !important;
+            color: #aaa !important;
+            font-weight: normal !important;
+            padding: 8px 6px !important;
+            font-size: 1.2rem !important;
+        }
+
     </style>
 </head>
 <body>
@@ -652,6 +699,12 @@
             <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v1.0</p>
         </div>
     </div>
+</div>
+
+<div id="pwa-toast">
+    <p>📲 Als App installieren?</p>
+    <button onclick="installPWA()">Installieren</button>
+    <button id="pwa-dismiss" onclick="dismissPWA()">✕</button>
 </div>
 
 <script>
@@ -1450,6 +1503,40 @@
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', handleViewportResize);
     }
+
+    // --- PWA: Service Worker + Install Prompt ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
+        });
+    }
+
+    let pwaInstallEvent = null;
+    const pwaToast = document.getElementById('pwa-toast');
+
+    window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        pwaInstallEvent = e;
+        pwaToast.classList.add('visible');
+    });
+
+    function installPWA() {
+        pwaToast.classList.remove('visible');
+        if (pwaInstallEvent) {
+            pwaInstallEvent.prompt();
+            pwaInstallEvent.userChoice.then(() => { pwaInstallEvent = null; });
+        }
+    }
+
+    function dismissPWA() {
+        pwaToast.classList.remove('visible');
+    }
+
+    window.addEventListener('appinstalled', () => {
+        pwaToast.classList.remove('visible');
+        pwaInstallEvent = null;
+    });
+
 </script>
 </body>
 </html>
