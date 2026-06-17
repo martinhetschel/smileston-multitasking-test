@@ -468,6 +468,19 @@
         }
 
         /* Pick-by-Light (Phase 4) */
+        @keyframes subtleShake {
+            0%   { transform: translate(0, 0); }
+            20%  { transform: translate(-1px, 1px); }
+            40%  { transform: translate(1px, -1px); }
+            60%  { transform: translate(-1px, 0); }
+            80%  { transform: translate(1px, 1px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        #keyboard.stress-shake {
+            animation: subtleShake 0.1s infinite;
+        }
+
         @keyframes pickLight {
             0%, 100% { background-color: var(--yellow); border-color: var(--anthracite); }
             50%       { background-color: #ffd04d;       border-color: var(--yellow); }
@@ -710,7 +723,7 @@
 
     // --- Web Audio API ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let lastTickTime = 0;
+    let lastTickSec = -1;
 
     function playSound(type) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -752,6 +765,25 @@
             gainNode.gain.setValueAtTime(0.3, now);
             gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
             osc.start(now); osc.stop(now + 1.5);
+        } else if (type === 'dok') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+            gainNode.gain.setValueAtTime(0.4, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        } else if (type === 'go') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, now);
+            gainNode.gain.setValueAtTime(0.5, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+            osc.start(now); osc.stop(now + 0.8);
+        } else if (type === 'tick_slow') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1000, now);
+            gainNode.gain.setValueAtTime(0.05, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            osc.start(now); osc.stop(now + 0.2);
         }
     }
 
@@ -833,6 +865,7 @@
         deadlineOverlayEl.classList.remove('active');
         deadlineFillEl.classList.remove('urgent');
         deadlineFillEl.style.width = '100%';
+        keyboardEl.classList.remove('stress-shake');
 
         showScreen('game-screen');
 
@@ -1053,6 +1086,7 @@
     function startDeadlineTimer() {
         deadlineFillEl.classList.remove('urgent');
         deadlineFillEl.style.width = '100%';
+        lastTickSec = -1;
         deadlineStartTime = performance.now();
         deadlinePaused = false;
         tickDeadline();
@@ -1065,16 +1099,18 @@
 
         deadlineFillEl.style.width = (fraction * 100) + '%';
 
-        if (remaining <= 10000 && remaining > 0) {
-            deadlineFillEl.classList.add('urgent');
-            if (elapsed - lastTickTime > 400) {
-                playSound('urgent');
-                lastTickTime = elapsed;
-            }
-        } else {
-            if (elapsed - lastTickTime > 1000) {
-                playSound('tick');
-                lastTickTime = elapsed;
+        const remainingSec = Math.ceil(remaining / 1000);
+
+        if (remainingSec !== lastTickSec && remainingSec > 0) {
+            lastTickSec = remainingSec;
+            if (remainingSec <= 5) {
+                deadlineFillEl.classList.add('urgent');
+                keyboardEl.classList.add('stress-shake');
+                playSound('dok');
+            } else if (remainingSec % 5 === 0) {
+                deadlineFillEl.classList.remove('urgent');
+                keyboardEl.classList.remove('stress-shake');
+                playSound('tick_slow');
             }
         }
 
@@ -1096,6 +1132,7 @@
 
     function triggerDeadline() {
         if (!document.getElementById('game-screen').classList.contains('active')) return;
+        keyboardEl.classList.remove('stress-shake');
         playSound('siren');
         if      (currentPhase === 1) phase1Extensions++;
         else if (currentPhase === 2) phase2Extensions++;
@@ -1107,6 +1144,7 @@
     }
 
     function buyExtension() {
+        keyboardEl.classList.remove('stress-shake');
         playSound('bell');
         deadlineOverlayEl.classList.remove('active');
         deadlineFillEl.classList.remove('urgent');
@@ -1116,6 +1154,7 @@
     }
 
     function runCountdown(callback) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         countdownOverlayEl.classList.add('active');
         inputLocked = true;
         const sequence = [5, 4, 3, 2, 1];
@@ -1126,6 +1165,7 @@
             void countdownNumberEl.offsetWidth;
             countdownNumberEl.style.animation = 'countdownPop 0.8s ease-out forwards';
             countdownNumberEl.textContent = sequence[idx];
+            playSound('dok');
             idx++;
 
             if (idx < sequence.length) {
@@ -1136,6 +1176,7 @@
                     void countdownNumberEl.offsetWidth;
                     countdownNumberEl.style.animation = 'countdownPop 0.4s ease-out forwards';
                     countdownNumberEl.textContent = 'LOS!';
+                    playSound('go');
                     setTimeout(() => {
                         countdownOverlayEl.classList.remove('active');
                         inputLocked = false;
@@ -1246,6 +1287,7 @@
 
     function finishPhase() {
         stopDeadlineTimer();
+        keyboardEl.classList.remove('stress-shake');
         deadlineOverlayEl.classList.remove('active');
         drawGrid();
         keyboardEl.innerHTML = '';
