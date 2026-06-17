@@ -1,5 +1,12 @@
-const CACHE = 'smilestone-v1';
-const ASSETS = ['./', './index.html', './icon-192.png', './icon-512.png', './manifest.json'];
+const CACHE = 'smilestone-v2';
+const ASSETS = [
+    './',
+    './index.html',
+    './kommunizieren.html',
+    './icon-192.png',
+    './icon-512.png',
+    './manifest.json',
+];
 
 self.addEventListener('install', e => {
     e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));

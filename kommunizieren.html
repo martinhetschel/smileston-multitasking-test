@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#FFB700">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Precision Gap">
+    <link rel="manifest" href="manifest.json">
+    <title>Precision Gap – Smilestone</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --yellow: #FFB700;
+            --anthracite: #2D2D2D;
+            --bg: #fff;
+            --panel: #f5f5f5;
+            --error: #c62828;
+            --success: #2e7d32;
+            --blue: #1565c0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--anthracite); }
+        #app { max-width: 480px; margin: 0 auto; min-height: 100%; background: var(--bg); display: flex; flex-direction: column; }
+
+        .screen { display: none; flex-direction: column; align-items: center; padding: 20px; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .screen.active { display: flex; }
+
+        h1 { font-size: 1.5rem; font-weight: 900; margin-bottom: 6px; text-align: center; }
+        h2 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+        p.sub { font-size: 0.88rem; color: #666; line-height: 1.5; text-align: center; margin-bottom: 16px; }
+
+        .btn { display: block; width: 100%; max-width: 340px; padding: 15px; border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; text-align: center; }
+        .btn-yellow { background: var(--yellow); color: var(--anthracite); }
+        .btn-dark   { background: var(--anthracite); color: #fff; }
+        .btn-outline { background: transparent; border: 2px solid var(--anthracite); color: var(--anthracite); }
+        .btn-blue   { background: var(--blue); color: #fff; }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn:active { opacity: 0.8; }
+
+        .phase-banner { background: var(--yellow); color: var(--anthracite); padding: 12px 16px; border-radius: 10px; width: 100%; max-width: 380px; margin-bottom: 14px; }
+        .phase-banner strong { display: block; font-size: 0.95rem; margin-bottom: 4px; }
+        .phase-banner p { font-size: 0.82rem; line-height: 1.45; color: var(--anthracite); }
+
+        /* Grid */
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: var(--anthracite); padding: 4px; border-radius: 8px; width: 100%; }
+        .grid.mirrored { transform: rotate(180deg); }
+        .cell { aspect-ratio: 1; background: #fff; border-radius: 3px; display: flex; align-items: center; justify-content: center; cursor: default; overflow: hidden; }
+        .cell.clickable { cursor: pointer; }
+        .cell.clickable:active { background: #f0f0f0; }
+        .cell.empty { background: #f5f5f5; }
+        .cell svg { width: 78%; height: 78%; display: block; }
+        .cell.match { outline: 3px solid var(--success); outline-offset: -3px; }
+        .cell.mismatch { outline: 3px solid var(--error); outline-offset: -3px; }
+        .cell.missing { background: #ffe0e0; }
+
+        .grid-wrap { width: 100%; max-width: 320px; margin: 8px 0; }
+        .grid-label { font-size: 0.72rem; font-weight: bold; color: #888; text-align: center; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+
+        /* Role cards */
+        .role-card { background: var(--panel); border-radius: 12px; padding: 14px; width: 100%; max-width: 340px; margin-top: 10px; }
+        .role-card h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+        .role-card p { font-size: 0.78rem; color: #666; margin-bottom: 10px; }
+        .copy-row { display: flex; gap: 8px; align-items: center; }
+        .copy-url { flex: 1; font-size: 0.68rem; color: #aaa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .copy-btn { padding: 7px 12px; background: var(--anthracite); color: #fff; border: none; border-radius: 7px; font-size: 0.78rem; cursor: pointer; white-space: nowrap; }
+        #qr-box { margin-top: 12px; display: flex; justify-content: center; }
+
+        /* Phase tabs */
+        .phase-tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 14px; }
+        .ptab { padding: 7px 14px; border-radius: 20px; border: 2px solid #ddd; background: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: #888; }
+        .ptab.active { background: var(--yellow); border-color: var(--yellow); color: var(--anthracite); }
+
+        /* Picker */
+        #picker { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; align-items: flex-end; justify-content: center; }
+        #picker.open { display: flex; }
+        #picker-box { background: #fff; border-radius: 16px 16px 0 0; padding: 20px; width: 100%; max-width: 480px; }
+        #picker-box h3 { font-size: 0.95rem; margin-bottom: 12px; }
+        .pick-row { display: flex; gap: 9px; margin-bottom: 14px; flex-wrap: wrap; }
+        .pbtn { width: 52px; height: 52px; border-radius: 8px; border: 3px solid transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; background: var(--panel); }
+        .pbtn svg { width: 34px; height: 34px; }
+        .pbtn.sel { border-color: var(--anthracite); }
+        .cdot { width: 30px; height: 30px; border-radius: 50%; }
+
+        /* Timer */
+        .timer-num { font-size: 2.5rem; font-weight: 900; color: var(--error); text-align: center; line-height: 1; }
+
+        /* Score */
+        .grids-row { display: flex; gap: 10px; width: 100%; max-width: 360px; }
+        .gcol { flex: 1; min-width: 0; }
+        .stat-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #eee; width: 100%; max-width: 340px; font-size: 0.88rem; }
+        .stat-row span { color: #666; }
+
+        .lean-box { background: var(--panel); border-radius: 10px; padding: 14px; width: 100%; max-width: 340px; margin-top: 10px; font-size: 0.84rem; line-height: 1.6; }
+        .hint { font-size: 0.78rem; color: #999; text-align: center; margin: 6px 0; }
+        .spacer { height: 60px; flex-shrink: 0; }
+        .versionlabel { font-size: 0.75rem; color: #bbb; padding-bottom: 24px; margin-top: 4px; }
+
+        .result-share { background: #e8f5e9; border-radius: 10px; padding: 12px 14px; width: 100%; max-width: 340px; margin-top: 12px; font-size: 0.82rem; }
+        .result-share strong { display: block; margin-bottom: 6px; color: var(--success); }
+    </style>
+</head>
+<body>
+<div id="app">
+
+    <!-- ===== HOME ===== -->
+    <div id="s-home" class="screen active">
+        <div style="height: 28px;"></div>
+        <h1>Precision Gap</h1>
+        <p class="sub">Kommunikation unter<br>Informations-Asymmetrie.<br><em>Navigator vs. Ausführender</em></p>
+
+        <div style="background:var(--yellow);border-radius:12px;padding:18px;width:100%;max-width:340px;margin-bottom:20px;">
+            <strong style="display:block;margin-bottom:8px;">🎯 Das Spiel</strong>
+            <p style="font-size:0.82rem;color:var(--anthracite);line-height:1.5;">
+                Der <strong>Navigator</strong> sieht ein Ziel-Raster (5×5) mit Formen und Farben – und muss es beschreiben.<br><br>
+                Der <strong>Ausführende</strong> sieht ein leeres, <em>um 180° gedrehtes</em> Raster und rekonstruiert es. Wie viel geht verloren?
+            </p>
+        </div>
+
+        <button class="btn btn-dark" onclick="newGame()">🚀 Neues Spiel starten</button>
+        <div class="spacer"></div>
+        <p class="versionlabel">v1.0 · Smilestone Kommunikations-Training</p>
+    </div>
+
+    <!-- ===== LOBBY ===== -->
+    <div id="s-lobby" class="screen">
+        <div style="height:14px;"></div>
+        <h1>Spiel bereit!</h1>
+        <p class="sub">Wähle eine Phase und teile die Links.</p>
+
+        <div class="phase-tabs">
+            <button class="ptab active" data-p="1" onclick="selectPhase(1)">Phase 1</button>
+            <button class="ptab" data-p="2" onclick="selectPhase(2)">Phase 2</button>
+            <button class="ptab" data-p="3" onclick="selectPhase(3)">Phase 3</button>
+            <button class="ptab" data-p="4" onclick="selectPhase(4)">Phase 4</button>
+        </div>
+        <div class="phase-banner" id="lobby-desc"></div>
+
+        <div class="role-card">
+            <h3>🗺️ Navigator</h3>
+            <p>Sieht das vollständige Ziel-Raster.</p>
+            <div class="copy-row">
+                <span class="copy-url" id="nav-url-txt"></span>
+                <button class="copy-btn" onclick="copyUrl('nav')">Kopieren</button>
+            </div>
+            <button class="btn btn-blue" style="margin-top:10px;font-size:0.88rem;padding:11px;" onclick="openAs('nav')">Als Navigator öffnen</button>
+        </div>
+
+        <div class="role-card">
+            <h3>🛠️ Ausführender</h3>
+            <p>Bekommt ein leeres, gedrehtes Raster. QR-Code scannen oder Link kopieren.</p>
+            <div class="copy-row">
+                <span class="copy-url" id="exe-url-txt"></span>
+                <button class="copy-btn" onclick="copyUrl('exe')">Kopieren</button>
+            </div>
+            <div id="qr-box"></div>
+        </div>
+
+        <button class="btn btn-outline" onclick="show('s-home')" style="margin-top:14px;">← Neues Spiel</button>
+        <div class="spacer"></div>
+        <p class="versionlabel">v1.0</p>
+    </div>
+
+    <!-- ===== NAVIGATOR ===== -->
+    <div id="s-nav" class="screen">
+        <div style="height:10px;"></div>
+        <h1 style="color:var(--blue);">🗺️ Navigator</h1>
+        <div class="phase-banner" id="nav-banner"></div>
+
+        <div id="nav-timer-box" style="display:none;text-align:center;margin-bottom:12px;">
+            <p class="hint">Verbleibende Beschreibungszeit:</p>
+            <div class="timer-num" id="nav-timer-num">15</div>
+            <button class="btn btn-outline" id="timer-btn" style="max-width:180px;padding:10px;font-size:0.88rem;margin-top:6px;" onclick="startTimer()">▶ Timer starten</button>
+        </div>
+
+        <p class="grid-label">Ziel-Raster (Soll)</p>
+        <div class="grid-wrap"><div class="grid" id="nav-grid"></div></div>
+
+        <div style="background:var(--panel);border-radius:10px;padding:12px;width:100%;max-width:320px;margin-top:12px;font-size:0.8rem;line-height:1.6;">
+            <strong>Koordinaten-Referenz:</strong><br>
+            Spalten: A (links) → E (rechts)<br>
+            Zeilen: 1 (oben) → 5 (unten)<br>
+            <span style="color:var(--error);">⚠ Ausführender sieht 180° gedreht!</span>
+        </div>
+
+        <button class="btn btn-outline" onclick="goLobby()" style="margin-top:16px;">← Lobby</button>
+        <div class="spacer"></div>
+    </div>
+
+    <!-- ===== EXECUTOR ===== -->
+    <div id="s-exe" class="screen">
+        <div style="height:10px;"></div>
+        <h1 style="color:var(--error);">🛠️ Ausführender</h1>
+        <div class="phase-banner" id="exe-banner"></div>
+
+        <p class="grid-label">Dein Raster (gespiegelt!)</p>
+        <div class="grid-wrap"><div class="grid mirrored" id="exe-grid"></div></div>
+        <p class="hint">Tippe auf ein Feld → Form & Farbe wählen</p>
+
+        <button class="btn btn-yellow" style="margin-top:14px;" onclick="submitExe()">✅ Fertig – Ergebnis anzeigen</button>
+        <button class="btn btn-outline" style="margin-top:8px;" onclick="resetExe()">🗑 Alles leeren</button>
+        <div class="spacer"></div>
+    </div>
+
+    <!-- ===== RESULT ===== -->
+    <div id="s-result" class="screen">
+        <div style="height:10px;"></div>
+        <h1>📊 Auswertung</h1>
+        <p class="sub" id="result-phase-lbl" style="margin-bottom:12px;"></p>
+
+        <div class="grids-row">
+            <div class="gcol">
+                <p class="grid-label">Soll</p>
+                <div class="grid" id="r-soll"></div>
+            </div>
+            <div class="gcol">
+                <p class="grid-label">Ist</p>
+                <div class="grid" id="r-ist"></div>
+            </div>
+        </div>
+
+        <div id="score-rows" style="width:100%;max-width:340px;margin-top:10px;"></div>
+        <div class="lean-box" id="lean-box"></div>
+
+        <div class="result-share">
+            <strong>🔗 Navigator informieren</strong>
+            Diesen Link teilen, damit auch der Navigator die Auswertung sehen kann:
+            <button class="copy-btn" style="margin-top:8px;width:100%;padding:10px;border-radius:8px;" onclick="shareResult()">Link kopieren</button>
+        </div>
+
+        <button class="btn btn-dark" style="margin-top:14px;" onclick="nextPhase()">→ Nächste Phase</button>
+        <button class="btn btn-outline" style="margin-top:8px;" onclick="show('s-home')">🔄 Neues Spiel</button>
+        <div class="spacer"></div>
+        <p class="versionlabel">v1.0</p>
+    </div>
+
+</div>
+
+<!-- ===== PICKER OVERLAY ===== -->
+<div id="picker">
+    <div id="picker-box">
+        <h3>Feld belegen</h3>
+        <p style="font-size:0.8rem;color:#888;margin-bottom:10px;">Form:</p>
+        <div class="pick-row" id="p-shapes"></div>
+        <p style="font-size:0.8rem;color:#888;margin-bottom:10px;">Farbe:</p>
+        <div class="pick-row" id="p-colors"></div>
+        <div style="display:flex;gap:10px;margin-top:10px;">
+            <button class="btn btn-yellow" style="flex:1;margin:0;" onclick="confirmPick()">Bestätigen</button>
+            <button class="btn btn-outline" style="flex:1;margin:0;" onclick="closePick()">Abbrechen</button>
+        </div>
+        <button class="btn" style="background:#eee;color:#999;margin-top:8px;" onclick="clearCell()">✕ Feld leeren</button>
+    </div>
+</div>
+
+<script>
+// ─── CONSTANTS ───────────────────────────────────────────────────
+const SHAPES = ['circle', 'square', 'triangle', 'diamond'];
+const COLORS = ['red', 'blue', 'yellow', 'green', 'orange'];
+const CHEX = { red:'#e53935', blue:'#1e88e5', yellow:'#FFB700', green:'#43a047', orange:'#fb8c00' };
+const SLABELS = { circle:'Kreis', square:'Quadrat', triangle:'Dreieck', diamond:'Raute' };
+const CLABELS = { red:'Rot', blue:'Blau', yellow:'Gelb', grün:'Grün', orange:'Orange' };
+const PHASES = [
+    { title:'Phase 1 – Information',    desc:'One-Way-Kommunikation: Du hast 15 Sekunden, das Ziel zu beschreiben. Der Ausführende hört nur zu. Danach Funkstille.',            timer:true  },
+    { title:'Phase 2 – Kommunikation',  desc:'Two-Way-Rauschen: Ihr dürft sprechen, aber die Spiegelung des Spielfelds stört. Fragen sind erlaubt.',                           timer:false },
+    { title:'Phase 3 – Workshop',       desc:'Standardisierung: Definiert gemeinsam eine Syntax (Koordinaten, Form-Namen). Optimiert den Prozess vor dem Start.',               timer:false },
+    { title:'Phase 4 – Coaching',       desc:'Flow-Zustand: Der Navigator coacht durch gezieltes Fragen statt Anweisungen. Ziel: Null-Fehler-Produktion.',                     timer:false },
+];
+
+// ─── STATE ───────────────────────────────────────────────────────
+let seed = '', phase = 1, sollGrid = [], exeGrid = [];
+let pickCell = null, pickShape = null, pickColor = null;
+let timerInt = null, timerSec = 15;
+
+// ─── SEEDED RNG ──────────────────────────────────────────────────
+function mkRng(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+    return () => { h = Math.imul(1664525, h) + 1013904223 | 0; return (h >>> 0) / 4294967296; };
+}
+
+function genGrid(s) {
+    const rng = mkRng(s);
+    return Array(5).fill(0).map(() => Array(5).fill(0).map(() => ({
+        shape: SHAPES[Math.floor(rng() * SHAPES.length)],
+        color: COLORS[Math.floor(rng() * COLORS.length)]
+    })));
+}
+
+// ─── SVG ─────────────────────────────────────────────────────────
+function svg(shape, color) {
+    const f = CHEX[color] || '#ccc';
+    const s = color === 'yellow' ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.3)';
+    const paths = {
+        circle:   `<circle cx="25" cy="25" r="18" fill="${f}" stroke="${s}" stroke-width="2"/>`,
+        square:   `<rect x="7" y="7" width="36" height="36" rx="3" fill="${f}" stroke="${s}" stroke-width="2"/>`,
+        triangle: `<polygon points="25,6 44,43 6,43" fill="${f}" stroke="${s}" stroke-width="2"/>`,
+        diamond:  `<polygon points="25,6 44,25 25,44 6,25" fill="${f}" stroke="${s}" stroke-width="2"/>`,
+    };
+    return `<svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">${paths[shape]||''}</svg>`;
+}
+
+// ─── URL HELPERS ─────────────────────────────────────────────────
+function getP() { return new URLSearchParams(location.search); }
+
+function mkUrl(params) {
+    const u = new URL(location.href.split('?')[0]);
+    for (const [k,v] of Object.entries(params)) u.searchParams.set(k, v);
+    return u.toString();
+}
+
+const navUrl  = (s, p)    => mkUrl({ seed:s, role:'nav', phase:p });
+const exeUrl  = (s, p)    => mkUrl({ seed:s, role:'exe', phase:p });
+const resUrl  = (s, p, st) => mkUrl({ seed:s, phase:p, state:st });
+const encG    = g => btoa(JSON.stringify(g));
+const decG    = b => { try { return JSON.parse(atob(b)); } catch { return null; } };
+
+// ─── SCREEN ──────────────────────────────────────────────────────
+function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+// ─── BOOT ────────────────────────────────────────────────────────
+(function init() {
+    const p = getP();
+    seed  = p.get('seed')  || '';
+    phase = parseInt(p.get('phase')) || 1;
+    const role  = p.get('role')  || '';
+    const state = p.get('state') || '';
+
+    if (!seed) { show('s-home'); return; }
+    sollGrid = genGrid(seed);
+
+    if (state) {
+        const ist = decG(state) || emptyGrid();
+        showResult(ist);
+    } else if (role === 'nav') {
+        showNav();
+    } else if (role === 'exe') {
+        exeGrid = emptyGrid();
+        showExe();
+    } else {
+        showLobby();
+    }
+})();
+
+function emptyGrid() { return Array(5).fill(0).map(() => Array(5).fill(null)); }
+
+// ─── HOME ────────────────────────────────────────────────────────
+function newGame() {
+    seed = Math.random().toString(36).substr(2, 4).toUpperCase();
+    phase = 1;
+    history.pushState({}, '', mkUrl({ seed }));
+    sollGrid = genGrid(seed);
+    showLobby();
+}
+
+// ─── LOBBY ───────────────────────────────────────────────────────
+function showLobby() {
+    updatePhaseUI();
+    show('s-lobby');
+}
+
+function updatePhaseUI() {
+    const ph = PHASES[phase - 1];
+    document.getElementById('lobby-desc').innerHTML = `<strong>${ph.title}</strong><p>${ph.desc}</p>`;
+    document.getElementById('nav-url-txt').textContent = navUrl(seed, phase);
+    document.getElementById('exe-url-txt').textContent = exeUrl(seed, phase);
+    document.querySelectorAll('.ptab').forEach(t => t.classList.toggle('active', +t.dataset.p === phase));
+    renderQR(exeUrl(seed, phase));
+}
+
+function selectPhase(n) { phase = n; updatePhaseUI(); }
+
+function copyUrl(role) {
+    const url = role === 'nav' ? navUrl(seed, phase) : exeUrl(seed, phase);
+    navigator.clipboard.writeText(url)
+        .then(() => alert('Link kopiert! ✓'))
+        .catch(() => prompt('Manuell kopieren:', url));
+}
+
+function openAs(role) { location.href = role === 'nav' ? navUrl(seed, phase) : exeUrl(seed, phase); }
+
+function goLobby() { history.pushState({}, '', mkUrl({ seed })); showLobby(); }
+
+function renderQR(url) {
+    const box = document.getElementById('qr-box');
+    box.innerHTML = '';
+    if (typeof QRCode !== 'undefined') {
+        new QRCode(box, { text: url, width: 160, height: 160, colorDark: '#2D2D2D', colorLight: '#ffffff' });
+    } else {
+        box.innerHTML = '<p style="font-size:0.75rem;color:#aaa;margin-top:8px;">QR-Code nicht verfügbar (offline). Link manuell kopieren.</p>';
+    }
+}
+
+// ─── NAVIGATOR ───────────────────────────────────────────────────
+function showNav() {
+    const ph = PHASES[phase - 1];
+    document.getElementById('nav-banner').innerHTML = `<strong>${ph.title}</strong><p>${ph.desc}</p>`;
+    document.getElementById('nav-timer-box').style.display = ph.timer ? 'block' : 'none';
+    if (ph.timer) { timerSec = 15; document.getElementById('nav-timer-num').textContent = '15'; }
+    renderStaticGrid('nav-grid', sollGrid);
+    show('s-nav');
+}
+
+function renderStaticGrid(id, grid) {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+        const d = document.createElement('div');
+        d.className = 'cell';
+        const v = grid[r][c];
+        if (v) d.innerHTML = svg(v.shape, v.color);
+        el.appendChild(d);
+    }
+}
+
+function startTimer() {
+    if (timerInt) clearInterval(timerInt);
+    timerSec = 15;
+    const numEl = document.getElementById('nav-timer-num');
+    const btn   = document.getElementById('timer-btn');
+    btn.textContent = '⏸ Läuft…';
+    btn.disabled = true;
+    timerInt = setInterval(() => {
+        timerSec--;
+        numEl.textContent = timerSec;
+        if (timerSec <= 0) {
+            clearInterval(timerInt);
+            numEl.textContent = '⛔';
+            btn.textContent = '▶ Nochmal';
+            btn.disabled = false;
+        }
+    }, 1000);
+}
+
+// ─── EXECUTOR ────────────────────────────────────────────────────
+function showExe() {
+    const ph = PHASES[phase - 1];
+    document.getElementById('exe-banner').innerHTML = `<strong>${ph.title}</strong><p>${ph.desc}</p>`;
+    renderExeGrid();
+    show('s-exe');
+}
+
+function renderExeGrid() {
+    const el = document.getElementById('exe-grid');
+    el.innerHTML = '';
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+        const d = document.createElement('div');
+        const v = exeGrid[r][c];
+        d.className = 'cell clickable' + (v ? '' : ' empty');
+        if (v) d.innerHTML = svg(v.shape, v.color);
+        d.onclick = () => openPick(r, c);
+        el.appendChild(d);
+    }
+}
+
+function resetExe() { exeGrid = emptyGrid(); renderExeGrid(); }
+
+function submitExe() {
+    location.href = resUrl(seed, phase, encG(exeGrid));
+}
+
+// ─── PICKER ──────────────────────────────────────────────────────
+function openPick(r, c) {
+    pickCell = { r, c };
+    const v = exeGrid[r][c];
+    pickShape = v ? v.shape : null;
+    pickColor = v ? v.color : null;
+    renderPickerRows();
+    document.getElementById('picker').classList.add('open');
+}
+
+function renderPickerRows() {
+    const sr = document.getElementById('p-shapes');
+    sr.innerHTML = '';
+    SHAPES.forEach(sh => {
+        const b = document.createElement('button');
+        b.className = 'pbtn' + (pickShape === sh ? ' sel' : '');
+        b.innerHTML = svg(sh, pickColor || 'blue');
+        b.title = SLABELS[sh];
+        b.onclick = () => { pickShape = sh; renderPickerRows(); };
+        sr.appendChild(b);
+    });
+
+    const cr = document.getElementById('p-colors');
+    cr.innerHTML = '';
+    COLORS.forEach(col => {
+        const b = document.createElement('button');
+        b.className = 'pbtn' + (pickColor === col ? ' sel' : '');
+        b.innerHTML = `<div class="cdot" style="background:${CHEX[col]}"></div>`;
+        b.title = col;
+        b.onclick = () => { pickColor = col; renderPickerRows(); };
+        cr.appendChild(b);
+    });
+}
+
+function confirmPick() {
+    if (pickCell && pickShape && pickColor) {
+        exeGrid[pickCell.r][pickCell.c] = { shape: pickShape, color: pickColor };
+    }
+    closePick();
+    renderExeGrid();
+}
+
+function clearCell() {
+    if (pickCell) exeGrid[pickCell.r][pickCell.c] = null;
+    closePick();
+    renderExeGrid();
+}
+
+function closePick() {
+    document.getElementById('picker').classList.remove('open');
+    pickCell = null;
+}
+
+document.getElementById('picker').addEventListener('click', e => {
+    if (e.target.id === 'picker') closePick();
+});
+
+// ─── RESULT ──────────────────────────────────────────────────────
+function showResult(ist) {
+    document.getElementById('result-phase-lbl').textContent = PHASES[phase - 1].title;
+    renderResultGrid('r-soll', sollGrid, ist, true);
+    renderResultGrid('r-ist',  ist, sollGrid, false);
+
+    const { shapeErr, colorErr } = calcScore(sollGrid, ist);
+    const total = 50, errors = shapeErr + colorErr;
+    const pct = Math.round(((total - errors) / total) * 100);
+    const pctCol = pct >= 80 ? 'var(--success)' : pct >= 50 ? '#e65100' : 'var(--error)';
+
+    document.getElementById('score-rows').innerHTML = `
+        <div class="stat-row"><span>Treffer gesamt:</span><strong style="color:${pctCol}">${pct}%</strong></div>
+        <div class="stat-row"><span>Form-Fehler:</span><strong style="color:${shapeErr>0?'var(--error)':'var(--success)'}">−${shapeErr}</strong></div>
+        <div class="stat-row"><span>Farb-Fehler:</span><strong style="color:${colorErr>0?'var(--error)':'var(--success)'}">−${colorErr}</strong></div>
+        <div class="stat-row"><span>Gesamt-Delta:</span><strong>−${errors} / ${total}</strong></div>
+    `;
+
+    const mode = phase <= 2 ? '📢 Befehlsempfänger-Modus' : '🎯 Lean-Kultur-Modus';
+    const advice = pct >= 90 ? '🏆 Exzellenz! Kommunikation nahezu verlustfrei.' :
+                   pct >= 70 ? '📈 Gut – Standardisierungs-Potential vorhanden.' :
+                   pct >= 40 ? '⚠️ Deutlicher Kommunikations-Gap. Workshop empfohlen.' :
+                               '🚨 Kritischer Präzisions-Gap. Weiter zu Phase 3 & 4!';
+    document.getElementById('lean-box').innerHTML = `
+        <strong>Lean Scorecard</strong><br>
+        <p style="margin-top:8px;">Führungstyp: <strong>${mode}</strong></p>
+        <p style="margin-top:6px;">${advice}</p>
+    `;
+
+    show('s-result');
+}
+
+function renderResultGrid(id, grid, ref, isSoll) {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+        const d = document.createElement('div');
+        const v = grid && grid[r] && grid[r][c];
+        const rv = ref && ref[r] && ref[r][c];
+        d.className = 'cell';
+        if (v && v.shape) d.innerHTML = svg(v.shape, v.color);
+
+        if (!isSoll) {
+            if (!v || !v.shape) {
+                d.classList.add('missing');
+            } else if (rv && v.shape === rv.shape && v.color === rv.color) {
+                d.classList.add('match');
+            } else {
+                d.classList.add('mismatch');
+            }
+        }
+        el.appendChild(d);
+    }
+}
+
+function calcScore(soll, ist) {
+    let shapeErr = 0, colorErr = 0;
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+        const s = soll[r][c];
+        const i = ist && ist[r] && ist[r][c];
+        if (!i || !i.shape || i.shape !== s.shape) shapeErr++;
+        if (!i || !i.color || i.color !== s.color) colorErr++;
+    }
+    return { shapeErr, colorErr };
+}
+
+function shareResult() {
+    const url = location.href;
+    navigator.clipboard.writeText(url)
+        .then(() => alert('Ergebnis-Link kopiert! ✓ Jetzt an den Navigator schicken.'))
+        .catch(() => prompt('Manuell kopieren:', url));
+}
+
+function nextPhase() {
+    phase = Math.min(phase + 1, 4);
+    history.pushState({}, '', mkUrl({ seed }));
+    exeGrid = emptyGrid();
+    showLobby();
+}
+
+// ─── SERVICE WORKER ──────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
