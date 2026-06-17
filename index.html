@@ -350,10 +350,23 @@
         .btn-wa { background-color: var(--wa-color); }
         .btn-mail { background-color: var(--anthracite); }
 
+        .deadline-info {
+            background-color: #fff8e1;
+            border-left: 6px solid var(--error);
+            padding: 14px 16px;
+            font-size: 0.88rem;
+            line-height: 1.55;
+            color: var(--anthracite);
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
         /* Deadline-Timer Fortschrittsbalken */
         #deadline-bar {
             width: 100%;
-            height: 10px;
+            height: 18px;
             background-color: var(--panel);
             flex-shrink: 0;
             margin-top: auto;
@@ -561,7 +574,7 @@
                 <button type="button" class="mode-btn active" data-journey="multitasking" onclick="selectJourney('multitasking')">Multitasking-Test</button>
                 <button type="button" class="mode-btn" data-journey="lean" onclick="selectJourney('lean')">Lean-Exzellenz</button>
             </div>
-            <p class="toggle-hint">Lean-Exzellenz: 4 Phasen – Flow/5S, Ergonomie &amp; Pick-by-Light.</p>
+            <p class="toggle-hint">Lean-Exzellenz: 5 Phasen – Flow, 5S, Ergonomie &amp; Pick-by-Light.</p>
 
             <div class="mode-selector" style="margin-top: 12px;">
                 <button type="button" class="mode-btn active" data-mode="standard" onclick="selectMode('standard')">Standard</button>
@@ -570,6 +583,10 @@
             <p class="toggle-hint">Hardcore: Eingabe der Zeichen in umgekehrter Reihenfolge.</p>
 
             <p class="hint">Die ersten 5 Zeilen sind bereits als Orientierungshilfe vorausgefüllt. Sie starten in Zeile 6.</p>
+
+            <div class="deadline-info">
+                <strong>⏱ Achtung:</strong> Sie haben pro Level exakt 45 Sekunden Zeit. Läuft die Zeit ab, wird der Prozess blockiert und Sie müssen zwingend eine Extraschicht / Überstunden kaufen, um weiterspielen zu können!
+            </div>
 
             <button class="btn" onclick="startGame(1)">Phase 1 starten</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
@@ -587,7 +604,7 @@
             <div id="keyboard"></div>
         </div>
 
-        <div id="end-screen" class="screen" style="height: auto; min-height: 100%; justify-content: flex-start; padding-top: 20px;">
+        <div id="end-screen" class="screen" style="height: auto; min-height: 100%; justify-content: flex-start; padding-top: 20px; padding-bottom: 60px;">
             <h1>Auswertung</h1>
             <div id="stats">
                 <!-- wird dynamisch von buildEndScreen() befüllt -->
@@ -667,6 +684,7 @@
     let timePhase2 = 0;
     let timePhase3 = 0;
     let timePhase4 = 0;
+    let timePhase5 = 0;
     let inputLocked = false;
     let windowStart = 0;
     let scrollAnimFrame = null;
@@ -675,6 +693,7 @@
     let phase2Extensions = 0;
     let phase3Extensions = 0;
     let phase4Extensions = 0;
+    let phase5Extensions = 0;
     let deadlinePaused = false;
     let deadlineStartTime = 0;
     let deadlineRafId = null;
@@ -725,12 +744,16 @@
             phase2Extensions = 0;
             phase3Extensions = 0;
             phase4Extensions = 0;
+            phase5Extensions = 0;
+            timePhase5 = 0;
         } else if (phase === 2) {
             phase2Extensions = 0;
         } else if (phase === 3) {
             phase3Extensions = 0;
         } else if (phase === 4) {
             phase4Extensions = 0;
+        } else if (phase === 5) {
+            phase5Extensions = 0;
         }
 
         gridData = Array(ROWS).fill().map(() => Array(COLS).fill(''));
@@ -751,9 +774,14 @@
 
         showScreen('game-screen');
 
-        if (phase <= 2) {
+        if (phase === 1) {
             buildStaticKeyboard();
-            if (phase === 2) updateKeyboardFor5S();
+        } else if (phase === 2) {
+            buildStaticKeyboard();
+            if (gameJourney !== 'lean') updateKeyboardFor5S();
+        } else if (phase === 3) {
+            buildStaticKeyboard();
+            updateKeyboardFor5S();
         } else {
             buildSortedKeyboard();
         }
@@ -763,7 +791,7 @@
         runCountdown(() => {
             startTime = performance.now();
             startDeadlineTimer();
-            if (phase === 4) highlightNextKey();
+            if (phase === 5) highlightNextKey();
         });
     }
 
@@ -1001,7 +1029,8 @@
         if      (currentPhase === 1) phase1Extensions++;
         else if (currentPhase === 2) phase2Extensions++;
         else if (currentPhase === 3) phase3Extensions++;
-        else                          phase4Extensions++;
+        else if (currentPhase === 4) phase4Extensions++;
+        else                          phase5Extensions++;
         deadlinePaused = true;
         deadlineOverlayEl.classList.add('active');
     }
@@ -1114,14 +1143,18 @@
             scrollGridIntoView();
 
             if (currentPhase >= 2 && columnFinished && activeCol < COLS) {
-                if (currentPhase === 2) {
+                if (currentPhase === 2 && gameJourney !== 'lean') {
                     updateKeyboardFor5S();
-                } else {
+                } else if (currentPhase === 3) {
+                    updateKeyboardFor5S();
+                } else if (currentPhase === 4) {
                     buildSortedKeyboard();
+                } else if (currentPhase === 5) {
+                    buildSortedKeyboard();
+                    highlightNextKey();
                 }
-                if (currentPhase === 4) highlightNextKey();
                 triggerSuccessOverlay(activeCol);
-            } else if (currentPhase === 4) {
+            } else if (currentPhase === 5) {
                 highlightNextKey();
             }
         }
@@ -1145,34 +1178,51 @@
 
         if (currentPhase === 1) {
             timePhase1 = duration;
-            setTransitionScreen(
-                'Phase 1 beendet',
-                'Ihre Zeit wurde erfasst.<br><br><strong>Runde 2: Spaltenweise (Flow) + 5S</strong><br><br>Füllen Sie das Raster nun <strong>Spalte für Spalte</strong> aus. Nicht benötigte Tasten werden ausgeblendet.',
-                'Phase 2 starten', 2
-            );
+            if (gameJourney === 'lean') {
+                setTransitionScreen(
+                    'Phase 1 beendet',
+                    'Ihre Zeit wurde erfasst.<br><br><strong>Runde 2: Der reine Flow</strong><br><br>Füllen Sie das Raster nun <strong>Spalte für Spalte</strong> aus – mit der vollen Tastatur. Kein 5S, kein Pick-by-Light. Pure Geschwindigkeit.',
+                    'Phase 2 starten', 2
+                );
+            } else {
+                setTransitionScreen(
+                    'Phase 1 beendet',
+                    'Ihre Zeit wurde erfasst.<br><br><strong>Runde 2: Spaltenweise (Flow) + 5S</strong><br><br>Füllen Sie das Raster nun <strong>Spalte für Spalte</strong> aus. Nicht benötigte Tasten werden ausgeblendet.',
+                    'Phase 2 starten', 2
+                );
+            }
             setTimeout(() => showScreen('transition-screen'), 500);
 
         } else if (currentPhase === 2 && gameJourney === 'lean') {
             timePhase2 = duration;
             setTransitionScreen(
                 'Phase 2 beendet',
-                'Stark! Jetzt kommt die Ergonomie-Stufe.<br><br><strong>Runde 3: Ergonomie</strong><br><br>Die 5S-Filterung bleibt aktiv. Die aktiven Tasten erscheinen nun in <strong>logischer, sortierter Reihenfolge</strong> – kein Suchen mehr nötig.',
+                'Gut! Jetzt kommt 5S ins Spiel.<br><br><strong>Runde 3: 5S-Modus</strong><br><br>Füllen Sie das Raster weiter <strong>Spalte für Spalte</strong> aus. Nicht benötigte Tasten werden nun <strong>ausgeblendet</strong> – kein Suchen mehr nötig.',
                 'Phase 3 starten', 3
             );
             setTimeout(() => showScreen('transition-screen'), 500);
 
-        } else if (currentPhase === 3) {
+        } else if (currentPhase === 3 && gameJourney === 'lean') {
             timePhase3 = duration;
             setTransitionScreen(
                 'Phase 3 beendet',
-                'Exzellent! Jetzt die Königsdisziplin.<br><br><strong>Runde 4: Pick-by-Light</strong><br><br>Die nächste zu drückende Taste <strong>leuchtet aktiv auf</strong>. Zero kognitive Belastung – maximale Prozessgeschwindigkeit.',
+                'Stark! Jetzt kommt die Ergonomie-Stufe.<br><br><strong>Runde 4: Ergonomie</strong><br><br>Die 5S-Filterung bleibt aktiv. Die aktiven Tasten erscheinen nun in <strong>logischer, sortierter Reihenfolge</strong> – kein Suchen mehr nötig.',
                 'Phase 4 starten', 4
+            );
+            setTimeout(() => showScreen('transition-screen'), 500);
+
+        } else if (currentPhase === 4 && gameJourney === 'lean') {
+            timePhase4 = duration;
+            setTransitionScreen(
+                'Phase 4 beendet',
+                'Exzellent! Jetzt die Königsdisziplin.<br><br><strong>Runde 5: Pick-by-Light</strong><br><br>Die nächste zu drückende Taste <strong>leuchtet aktiv auf</strong>. Zero kognitive Belastung – maximale Prozessgeschwindigkeit.',
+                'Phase 5 starten', 5
             );
             setTimeout(() => showScreen('transition-screen'), 500);
 
         } else {
             if (currentPhase === 2) timePhase2 = duration;
-            else timePhase4 = duration;
+            else timePhase5 = duration;
             buildEndScreen();
             setTimeout(() => showScreen('end-screen'), 500);
         }
@@ -1180,13 +1230,19 @@
 
     function buildEndScreen() {
         const isLean = gameJourney === 'lean';
-        const lastTime = isLean ? timePhase4 : timePhase2;
+        const lastTime = isLean ? timePhase5 : timePhase2;
         const modeLabel = (isLean ? 'Lean-Exzellenz' : 'Multitasking-Test') +
                           (gameMode === 'hardcore' ? ' (Hardcore)' : '');
-        const extArr = [phase1Extensions, phase2Extensions, phase3Extensions, phase4Extensions];
-        const phaseCount = isLean ? 4 : 2;
-        const phaseLabels = ['Zeilen / Multitasking', 'Flow + 5S', 'Ergonomie', 'Pick-by-Light'];
-        const phaseTimes = [timePhase1, timePhase2, timePhase3, timePhase4];
+        const extArr = isLean
+            ? [phase1Extensions, phase2Extensions, phase3Extensions, phase4Extensions, phase5Extensions]
+            : [phase1Extensions, phase2Extensions];
+        const phaseCount = isLean ? 5 : 2;
+        const phaseLabels = isLean
+            ? ['Zeilen / Multitasking', 'Flow (spaltenweise)', '5S-Modus', 'Ergonomie', 'Pick-by-Light']
+            : ['Zeilen / Multitasking', 'Flow + 5S'];
+        const phaseTimes = isLean
+            ? [timePhase1, timePhase2, timePhase3, timePhase4, timePhase5]
+            : [timePhase1, timePhase2];
 
         const diffAbs  = (timePhase1 - lastTime).toFixed(1);
         const diffPct  = (((timePhase1 - lastTime) / timePhase1) * 100).toFixed(1);
@@ -1211,7 +1267,7 @@
         for (let p = 0; p < phaseCount; p++) {
             html += `<div class="stat-row"><span>Runde ${p+1} (${phaseLabels[p]}):</span> <strong>${phaseTimes[p].toFixed(1)} s</strong></div>`;
         }
-        const compareLabel = isLean ? 'Ersparnis (Runde 4 vs. 1):' : 'Zeitersparnis:';
+        const compareLabel = isLean ? 'Ersparnis (Runde 5 vs. 1):' : 'Zeitersparnis:';
         html += `<div class="stat-row" style="margin-top:10px;border-top:2px solid var(--anthracite);padding-top:10px;">
                     <span>${compareLabel}</span> <strong class="${diffClass}">${diffText}</strong>
                  </div>`;
@@ -1223,10 +1279,13 @@
 
         // --- Erklärungstext ---
         let explain = 'Warum waren Sie im Vergleich zu Runde 1 so viel schneller? Multitasking kostet enorme Energie, da das Gehirn ständig "umrüsten" muss.';
-        explain += ' In Runde 2 haben wir die 5S-Methode angewendet: nur die Werkzeuge, die Sie gerade brauchen – kein Suchen, kein Ablenken.';
         if (isLean) {
-            explain += ' In Runde 3 (Ergonomie) wurden die aktiven Tasten in logischer Reihenfolge angeordnet – das visuelle Suchen entfiel komplett.';
-            explain += ' In Runde 4 (Pick-by-Light) leuchtete die nächste Taste aktiv auf: Zero kognitive Belastung, maximale Prozessgeschwindigkeit.';
+            explain += ' In Runde 2 (Flow) haben Sie das Raster spaltenweise ausgefüllt – kein Kontextwechsel, kein Umschalten der Aufmerksamkeit.';
+            explain += ' In Runde 3 (5S-Modus) haben wir die 5S-Methode angewendet: nur die Werkzeuge, die Sie gerade brauchen – kein Suchen, kein Ablenken.';
+            explain += ' In Runde 4 (Ergonomie) wurden die aktiven Tasten in logischer Reihenfolge angeordnet – das visuelle Suchen entfiel komplett.';
+            explain += ' In Runde 5 (Pick-by-Light) leuchtete die nächste Taste aktiv auf: Zero kognitive Belastung, maximale Prozessgeschwindigkeit.';
+        } else {
+            explain += ' In Runde 2 haben wir die 5S-Methode angewendet: nur die Werkzeuge, die Sie gerade brauchen – kein Suchen, kein Ablenken.';
         }
         if (gameMode === 'hardcore') {
             explain += ' Sie haben diese Runde unter erschwerten Bedingungen absolviert (umgekehrte Reihenfolge). In der Arbeitsrealität steht dies für fehlende Standards oder schlechte Ergonomie: Ungewöhnliche Abläufe verzögern den Prozess und zwingen das Gehirn zu unnötiger Zusatzarbeit.';
