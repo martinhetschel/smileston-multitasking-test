@@ -7,13 +7,13 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
-    <title>Precision Gap – Smilestone</title>
+    <title>Precision Gap – Das Experiment</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         :root {
             --yellow: #FFB700; --anthracite: #2D2D2D; --bg: #fff;
             --panel: #f5f5f5; --error: #c62828; --success: #2e7d32;
-            --blue: #1565c0; --violet: #6a1b9a;
+            --blue: #1565c0;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--anthracite); }
@@ -21,55 +21,43 @@
         .screen { display: none; flex-direction: column; align-items: center; padding: 20px; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .screen.active { display: flex; }
         h1 { font-size: 1.45rem; font-weight: 900; text-align: center; margin-bottom: 6px; }
-        p.sub { font-size: 0.88rem; color: #666; line-height: 1.5; text-align: center; margin-bottom: 14px; }
         .btn { display: block; width: 100%; max-width: 340px; padding: 15px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: bold; cursor: pointer; margin-top: 10px; text-align: center; }
         .btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .btn-yellow  { background: var(--yellow); color: var(--anthracite); }
         .btn-dark    { background: var(--anthracite); color: #fff; }
         .btn-outline { background: transparent; border: 2px solid var(--anthracite); color: var(--anthracite); }
-        .btn-blue    { background: var(--blue); color: #fff; }
         .btn:active:not(:disabled) { opacity: 0.75; }
 
+        /* Story */
+        .story-box { background: var(--panel); border-radius: 12px; padding: 18px 16px; width: 100%; max-width: 380px; font-size: 0.89rem; line-height: 1.7; color: #444; }
+        .story-box p + p { margin-top: 12px; }
+        .story-close { font-style: italic; font-weight: 700; color: var(--anthracite); margin-top: 16px; text-align: center; font-size: 0.93rem; }
+
+        /* Challenge */
+        .challenge-box { background: var(--anthracite); color: #fff; border-radius: 12px; padding: 14px 16px; width: 100%; max-width: 380px; }
+        .challenge-eyebrow { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--yellow); margin-bottom: 5px; }
+        .challenge-title { font-size: 1rem; font-weight: 800; margin-bottom: 5px; }
+        .challenge-desc { font-size: 0.82rem; opacity: 0.8; line-height: 1.5; }
+
+        /* Seed */
+        .seed-badge { font-size: 2rem; font-weight: 900; letter-spacing: 0.2em; color: var(--anthracite); background: var(--panel); border-radius: 10px; padding: 10px 28px; margin: 8px 0 4px; }
+
+        /* Banner */
         .banner { border-radius: 10px; padding: 13px 15px; width: 100%; max-width: 380px; margin-bottom: 13px; }
         .banner strong { display: block; font-size: 0.93rem; margin-bottom: 4px; }
         .banner p { font-size: 0.82rem; line-height: 1.45; }
-        .banner-yellow { background: var(--yellow); color: var(--anthracite); }
-        .banner-blue   { background: #e3f2fd; color: var(--blue); }
-        .banner-grey   { background: var(--panel); color: #444; }
+        .banner-blue { background: #e3f2fd; color: var(--blue); }
+        .banner-grey { background: var(--panel); color: #444; }
 
-        /* --- Free Space (Navigator) --- */
-        .free-space {
-            position: relative;
-            width: min(300px, 90vw);
-            aspect-ratio: 1;
-            background: #fff;
-            border-radius: 12px;
-            margin: 8px 0;
-            flex-shrink: 0;
-        }
-        .free-symbol {
-            position: absolute;
-            transform: translate(-50%, -50%);
-        }
+        /* Free Space (Impulsgeber) */
+        .free-space { position: relative; width: min(300px, 90vw); aspect-ratio: 1; background: #fff; border-radius: 12px; margin: 8px 0; flex-shrink: 0; }
+        .free-symbol { position: absolute; transform: translate(-50%, -50%); }
         .free-symbol svg { display: block; }
 
-        /* --- Grid (Executor) --- */
+        /* Grid (Gestalter) */
         .grid-wrap { width: min(300px, 90vw); margin: 8px 0; flex-shrink: 0; }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 4px;
-            background: var(--anthracite);
-            padding: 4px;
-            border-radius: 8px;
-        }
-        .cell {
-            aspect-ratio: 1;
-            background: #f9f9f9;
-            border-radius: 3px;
-            display: flex; align-items: center; justify-content: center;
-            position: relative;
-        }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: var(--anthracite); padding: 4px; border-radius: 8px; }
+        .cell { aspect-ratio: 1; background: #f9f9f9; border-radius: 3px; display: flex; align-items: center; justify-content: center; }
         .cell.clickable { cursor: pointer; }
         .cell.clickable:active { background: #efefef; }
         .cell svg { width: 78%; height: 78%; display: block; }
@@ -78,28 +66,20 @@
         .cell.c-missing { background: #ffe0e0; }
         .cell.c-extra   { background: #f5f5f5; opacity: 0.5; }
 
-        /* --- Lobby cards --- */
-        .role-card { background: var(--panel); border-radius: 12px; padding: 14px; width: 100%; max-width: 340px; margin-top: 10px; }
-        .role-card h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
-        .role-card p  { font-size: 0.78rem; color: #666; margin-bottom: 8px; }
-        .copy-row { display: flex; gap: 8px; align-items: center; }
+        /* Connect */
+        .copy-row { display: flex; gap: 8px; align-items: center; width: 100%; max-width: 340px; }
         .copy-url { flex: 1; font-size: 0.68rem; color: #aaa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .copy-btn { padding: 7px 12px; background: var(--anthracite); color: #fff; border: none; border-radius: 7px; font-size: 0.78rem; cursor: pointer; white-space: nowrap; }
-        #qr-box { margin-top: 10px; display: flex; justify-content: center; }
+        #qr-box { display: flex; justify-content: center; margin: 8px 0 4px; }
 
-        /* --- Phase tabs --- */
-        .phase-tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px; }
-        .ptab { padding: 7px 13px; border-radius: 20px; border: 2px solid #ddd; background: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: #888; }
-        .ptab.active { background: var(--yellow); border-color: var(--yellow); color: var(--anthracite); }
-
-        /* --- Wait screen (phase 1/2) --- */
+        /* Wait screen */
         .wait-box { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; width: 100%; flex: 1; padding: 20px 0; }
         .wait-icon { font-size: 3.5rem; }
         .wait-text { font-size: 1rem; font-weight: 700; text-align: center; color: var(--anthracite); max-width: 280px; line-height: 1.5; }
         .wait-hint { font-size: 0.82rem; color: #888; text-align: center; max-width: 260px; line-height: 1.4; }
         .timer-big { font-size: 2.8rem; font-weight: 900; color: var(--error); line-height: 1; }
 
-        /* --- Picker --- */
+        /* Picker */
         #picker { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; align-items: flex-end; justify-content: center; }
         #picker.open { display: flex; }
         #picker-box { background: #fff; border-radius: 16px 16px 0 0; padding: 20px; width: 100%; max-width: 480px; }
@@ -111,7 +91,7 @@
         .pbtn:active { opacity: 0.7; }
         .cdot { width: 28px; height: 28px; border-radius: 50%; }
 
-        /* --- Scoring table --- */
+        /* Scoring */
         .score-table { width: 100%; max-width: 380px; border-collapse: collapse; margin-top: 10px; font-size: 0.82rem; }
         .score-table th { background: var(--panel); padding: 7px 6px; text-align: left; font-size: 0.75rem; color: #888; border-bottom: 2px solid #ddd; }
         .score-table td { padding: 7px 6px; border-bottom: 1px solid #eee; vertical-align: middle; }
@@ -119,16 +99,17 @@
         .cross { color: var(--error);   font-weight: bold; }
         .dash  { color: #bbb; }
 
-        .stat-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #eee; width: 100%; max-width: 340px; font-size: 0.88rem; }
-        .stat-row span { color: #666; }
-
-        .lean-box { background: var(--panel); border-radius: 10px; padding: 14px; width: 100%; max-width: 380px; margin-top: 10px; font-size: 0.84rem; line-height: 1.6; }
+        /* Scorecard + Reflect */
+        .scorecard-box { background: var(--panel); border-radius: 10px; padding: 14px; width: 100%; max-width: 380px; margin-top: 10px; font-size: 0.84rem; line-height: 1.6; }
+        .reflect-box { background: #fff8e1; border-radius: 10px; border-left: 4px solid var(--yellow); padding: 13px 14px; width: 100%; max-width: 380px; margin-top: 10px; }
+        .reflect-box strong { display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #b88000; margin-bottom: 5px; }
+        .reflect-box p { font-size: 0.88rem; line-height: 1.55; color: #5d4037; }
 
         .hint   { font-size: 0.78rem; color: #999; text-align: center; margin: 5px 0; }
         .spacer { height: 60px; flex-shrink: 0; }
         .vl     { font-size: 0.75rem; color: #bbb; padding-bottom: 24px; margin-top: 4px; }
-
         .coord-hint { background: var(--panel); border-radius: 8px; padding: 10px 12px; font-size: 0.78rem; line-height: 1.6; width: 100%; max-width: 340px; margin-top: 10px; color: #555; }
+        .divider { width: 100%; max-width: 340px; border: none; border-top: 1px solid #eee; margin: 16px 0; }
     </style>
 </head>
 <body>
@@ -136,58 +117,45 @@
 
     <!-- HOME -->
     <div id="s-home" class="screen active">
-        <div style="height:30px"></div>
+        <div style="height:28px"></div>
         <h1>Precision Gap</h1>
-        <p class="sub">Kommunikations-Simulation.<br>Wie viel geht verloren?</p>
-        <div class="banner banner-yellow" style="margin-bottom:18px;">
-            <strong>🎯 Das Spiel</strong>
-            <p>Der <strong>Navigator</strong> sieht 5 Symbole (Form, Farbe, Orientierung) im freien Raum – und beschreibt sie. Der <strong>Ausführende</strong> rekonstruiert das Bild blind auf einem 5×5-Raster. Vier Phasen zeigen, wie Kommunikation, Standards und Coaching die Präzision steigern.</p>
+        <p style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;color:#bbb;text-transform:uppercase;margin-bottom:22px;">Das Experiment</p>
+        <div class="story-box">
+            <p>Wie gut verstehen wir uns wirklich? In einer Welt voller Informationen ist die größte Herausforderung nicht das Senden, sondern das <strong>Ankommen</strong> der Nachricht.</p>
+            <p>In diesem Experiment seid ihr ein Team. Eure Aufgabe ist es, gemeinsam ein Zielbild zu erschaffen, das nur einer von euch kennt. Doch zwischen dem, was der eine sieht, und dem, was der andere baut, liegt oft eine Welt voller Interpretationen.</p>
+            <p>Ihr durchlauft vier Phasen – von reiner Information bis hin zu echtem Coaching. Lernt, wie aus bloßer Information eine gemeinsame Sprache entsteht, wie Vorannahmen zu Fehlern führen und wie präzise Kommunikation den Unterschied macht.</p>
+            <p class="story-close">Seid ihr bereit, den Abstand zwischen<br>Vorstellung und Realität zu schließen?</p>
         </div>
-        <button class="btn btn-dark" onclick="newGame()">🚀 Neues Spiel starten</button>
+        <button class="btn btn-dark" onclick="newGame()" style="margin-top:22px;">🚀 Experiment starten</button>
         <a href="index.html" style="display:block;width:100%;max-width:340px;margin-top:10px;padding:13px;border-radius:10px;border:2px solid var(--anthracite);color:var(--anthracite);font-size:0.9rem;font-weight:bold;text-align:center;text-decoration:none;">← Multitasking-Test</a>
-        <div class="spacer"></div>
-        <p class="vl">v1.0 · Smilestone Kommunikations-Training</p>
-    </div>
-
-    <!-- LOBBY -->
-    <div id="s-lobby" class="screen">
-        <div style="height:12px"></div>
-        <h1>Spiel bereit!</h1>
-        <p class="sub">Phase wählen, Links teilen, loslegen.</p>
-        <div class="phase-tabs">
-            <button class="ptab active" data-p="1" onclick="selPhase(1)">Phase 1</button>
-            <button class="ptab" data-p="2" onclick="selPhase(2)">Phase 2</button>
-            <button class="ptab" data-p="3" onclick="selPhase(3)">Phase 3</button>
-            <button class="ptab" data-p="4" onclick="selPhase(4)">Phase 4</button>
-        </div>
-        <div class="banner banner-yellow" id="lobby-desc"></div>
-        <div class="role-card">
-            <h3>🗺️ Navigator</h3>
-            <p>Sieht die 5 Symbole im freien Raum (ohne Gitter).</p>
-            <div class="copy-row">
-                <span class="copy-url" id="nav-url-txt"></span>
-                <button class="copy-btn" onclick="copyUrl('nav')">Kopieren</button>
-            </div>
-            <button class="btn btn-blue" style="margin-top:9px;font-size:0.88rem;padding:11px;" onclick="openAs('nav')">Als Navigator öffnen</button>
-        </div>
-        <div class="role-card">
-            <h3>🛠️ Ausführender</h3>
-            <p>Bekommt ein Raster – aber erst nach dem Start.</p>
-            <div class="copy-row">
-                <span class="copy-url" id="exe-url-txt"></span>
-                <button class="copy-btn" onclick="copyUrl('exe')">Kopieren</button>
-            </div>
-            <div id="qr-box"></div>
-        </div>
-        <button class="btn btn-outline" style="margin-top:12px;" onclick="show('s-home')">← Neues Spiel</button>
         <div class="spacer"></div>
         <p class="vl">v1.0</p>
     </div>
 
-    <!-- NAVIGATOR -->
+    <!-- CONNECT -->
+    <div id="s-connect" class="screen">
+        <div style="height:12px"></div>
+        <div class="challenge-box" id="challenge-box"></div>
+        <p class="hint" style="margin-top:18px;">Verbindet euch über diesen Sitzcode:</p>
+        <div class="seed-badge" id="seed-badge-el"></div>
+        <div id="qr-box"></div>
+        <div class="copy-row">
+            <span class="copy-url" id="ges-url-txt"></span>
+            <button class="copy-btn" onclick="copyGesUrl()">Kopieren</button>
+        </div>
+        <hr class="divider">
+        <p class="hint" style="font-size:0.82rem;color:#555;margin-bottom:2px;">Sobald ihr verbunden seid, wählt eure Rolle:</p>
+        <button class="btn btn-dark" onclick="openAs('imp')" style="margin-top:8px;">🧭 Ich bin der Impulsgeber</button>
+        <button class="btn btn-yellow" onclick="openAs('ges')" style="margin-top:8px;">🛠️ Ich bin der Gestalter</button>
+        <button class="btn btn-outline" onclick="show('s-home')" style="margin-top:18px;">← Neues Experiment</button>
+        <div class="spacer"></div>
+        <p class="vl">v1.0</p>
+    </div>
+
+    <!-- IMPULSGEBER -->
     <div id="s-nav" class="screen">
         <div style="height:10px"></div>
-        <h1 style="color:var(--blue)">🗺️ Navigator</h1>
+        <h1 style="color:var(--blue)">🧭 Impulsgeber</h1>
         <div class="banner banner-blue" id="nav-banner"></div>
         <div id="nav-timer-box" style="display:none;text-align:center;margin-bottom:10px;">
             <p class="hint">Du hast 15 Sekunden:</p>
@@ -199,14 +167,14 @@
         <div class="coord-hint">
             <strong>Was du beschreiben musst:</strong> Form · Farbe · Orientierung (falls relevant) · Position im Raum ("oben links", "zentral", "rechts neben dem Kreis" …)
         </div>
-        <button class="btn btn-outline" onclick="goLobby()" style="margin-top:14px;">← Lobby</button>
+        <button class="btn btn-outline" onclick="goConnect()" style="margin-top:14px;">← Sitzraum</button>
         <div class="spacer"></div>
     </div>
 
-    <!-- EXECUTOR WAIT (phase 1 & 2) -->
+    <!-- GESTALTER WAIT -->
     <div id="s-exe-wait" class="screen">
         <div style="height:10px"></div>
-        <h1 style="color:var(--error)">🛠️ Ausführender</h1>
+        <h1>🛠️ Gestalter</h1>
         <div class="banner banner-grey" id="exe-wait-banner"></div>
         <div class="wait-box">
             <div class="wait-icon" id="exe-wait-icon">🎧</div>
@@ -217,10 +185,10 @@
         </div>
     </div>
 
-    <!-- EXECUTOR PLAY -->
+    <!-- GESTALTER PLAY -->
     <div id="s-exe-play" class="screen">
         <div style="height:10px"></div>
-        <h1 style="color:var(--error)">🛠️ Ausführender</h1>
+        <h1>🛠️ Gestalter</h1>
         <div class="banner banner-grey" id="exe-play-banner"></div>
         <p class="hint" style="margin-bottom:4px;">Tippe auf ein Feld → Symbol setzen</p>
         <div class="grid-wrap"><div class="grid" id="exe-grid"></div></div>
@@ -233,28 +201,29 @@
     <div id="s-result" class="screen">
         <div style="height:10px"></div>
         <h1>📊 Auswertung</h1>
-        <p class="sub" id="result-phase-lbl"></p>
+        <p style="font-size:0.82rem;color:#888;margin-bottom:10px;text-align:center;" id="result-phase-lbl"></p>
         <div style="display:flex;gap:12px;width:100%;max-width:380px;margin:8px 0;">
             <div style="flex:1;min-width:0;">
-                <p class="hint" style="margin-bottom:4px;">Soll (Navigator)</p>
+                <p class="hint" style="margin-bottom:4px;">Zielbild (Impulsgeber)</p>
                 <div class="free-space" style="width:100%;border:1px solid #eee;" id="r-soll"></div>
             </div>
             <div style="flex:1;min-width:0;">
-                <p class="hint" style="margin-bottom:4px;">Ist (Ausführender)</p>
+                <p class="hint" style="margin-bottom:4px;">Ergebnis (Gestalter)</p>
                 <div class="grid-wrap" style="width:100%;margin:0;"><div class="grid" id="r-ist"></div></div>
             </div>
         </div>
-        <table class="score-table" id="score-tbl">
+        <table class="score-table">
             <thead><tr><th>Symbol</th><th>Position</th><th>Form</th><th>Farbe</th><th>Orient.</th></tr></thead>
             <tbody id="score-body"></tbody>
         </table>
-        <div class="lean-box" id="lean-box"></div>
-        <div style="background:#e8f5e9;border-radius:10px;padding:12px 14px;width:100%;max-width:340px;margin-top:10px;font-size:0.82rem;">
-            <strong style="display:block;margin-bottom:6px;color:var(--success)">🔗 Navigator informieren</strong>
+        <div class="scorecard-box" id="scorecard-box"></div>
+        <div class="reflect-box" id="reflect-box" style="display:none;"></div>
+        <div style="background:#e8f5e9;border-radius:10px;padding:12px 14px;width:100%;max-width:380px;margin-top:10px;font-size:0.82rem;">
+            <strong style="display:block;margin-bottom:6px;color:var(--success)">🔗 Impulsgeber informieren</strong>
             <button class="copy-btn" style="width:100%;padding:10px;border-radius:8px;" onclick="shareResult()">Ergebnis-Link kopieren</button>
         </div>
-        <button class="btn btn-dark" style="margin-top:12px;" onclick="nextPhase()">→ Nächste Phase</button>
-        <button class="btn btn-outline" style="margin-top:8px;" onclick="show('s-home')">🔄 Neues Spiel</button>
+        <button class="btn btn-dark" id="next-phase-btn" style="margin-top:12px;display:none;" onclick="nextPhase()"></button>
+        <button class="btn btn-outline" style="margin-top:8px;" onclick="show('s-home')">🔄 Neues Experiment</button>
         <div class="spacer"></div>
         <p class="vl">v1.0</p>
     </div>
@@ -290,46 +259,56 @@ const HAS_ORIENT = new Set(['triangle','rectangle','ellipse']);
 const CHEX  = { red:'#e53935', blue:'#1e88e5', yellow:'#FFB700' };
 const SLBL  = { circle:'Kreis', square:'Quadrat', triangle:'Dreieck', rectangle:'Rechteck', ellipse:'Ellipse' };
 const CLBL  = { red:'Rot', blue:'Blau', yellow:'Gelb' };
-// triangle: 4 orientations; rectangle + ellipse: only 2 (0/90 are visually distinct, 180/270 are redundant)
 function orientCount(shape) { return shape === 'triangle' ? 4 : (HAS_ORIENT.has(shape) ? 2 : 1); }
-const OLBL  = { 0:'0°', 90:'90°', 180:'180°', 270:'270°' };
 
 const PHASES = [
     {
-        title: 'Phase 1 – Information (One-Way)',
-        navDesc: 'Du hast 15 Sekunden. Beschreibe alle 5 Symbole. Der Ausführende hört zu – kein Dialog.',
-        exeWaitText: 'Höre den Anweisungen zu.',
-        exeWaitHint: 'Du darfst nicht sprechen und siehst noch kein Spielfeld.',
-        exeIcon: '🎧',
+        title: 'Phase 1 – Reine Information',
+        challengeTitle: 'Die Herausforderung: Reine Information',
+        challengeDesc: 'Der Impulsgeber beschreibt einmalig – kein Dialog, keine Rückfragen.',
+        impDesc: 'Du hast 15 Sekunden. Beschreibe alle 5 Symbole. Der Gestalter hört zu – kein Dialog.',
+        gesWaitText: 'Höre den Anweisungen zu.',
+        gesWaitHint: 'Du darfst nicht sprechen und siehst noch kein Spielfeld.',
+        gesIcon: '🎧',
         timerLock: true,
         showGridEarly: false,
+        reflection: 'Was war die größte Hürde? Wie viel Information ist ohne Rückfragen verloren gegangen?',
     },
     {
-        title: 'Phase 2 – Kommunikation (Two-Way)',
-        navDesc: 'Ihr dürft frei sprechen. Beantworte Fragen des Ausführenden.',
-        exeWaitText: 'Du darfst Fragen stellen.',
-        exeWaitHint: 'Du siehst aber noch kein Gitter. Stelle gezielte Fragen.',
-        exeIcon: '💬',
+        title: 'Phase 2 – Offener Dialog',
+        challengeTitle: 'Die Herausforderung: Offener Dialog',
+        challengeDesc: 'Ihr dürft frei sprechen. Was verändert sich, wenn Rückfragen möglich sind?',
+        impDesc: 'Ihr dürft frei sprechen. Beantworte Fragen des Gestalters.',
+        gesWaitText: 'Du darfst Fragen stellen.',
+        gesWaitHint: 'Du siehst aber noch kein Gitter. Stelle gezielte Fragen.',
+        gesIcon: '💬',
         timerLock: false,
         showGridEarly: false,
+        reflection: 'Haben Rückfragen geholfen? Was blieb trotzdem unklar oder wurde falsch interpretiert?',
     },
     {
-        title: 'Phase 3 – Workshop (Standardisierung)',
-        navDesc: 'Definiert gemeinsam eine Syntax (Koordinaten, Form-Namen). Optimiert den Prozess vorher.',
-        exeWaitText: 'Jetzt dürft ihr euch abstimmen.',
-        exeWaitHint: 'Ihr seht nun das Spielfeld. Definiert gemeinsam Koordinaten und Begriffe.',
-        exeIcon: '🛠',
+        title: 'Phase 3 – Gemeinsame Sprache',
+        challengeTitle: 'Die Herausforderung: Gemeinsame Sprache',
+        challengeDesc: 'Definiert gemeinsam eine Syntax: Koordinaten, Formbegriffe, Farbcodes.',
+        impDesc: 'Definiert gemeinsam eine Syntax. Optimiert den Prozess bevor ihr startet.',
+        gesWaitText: 'Jetzt dürft ihr euch abstimmen.',
+        gesWaitHint: 'Ihr seht nun das Spielfeld. Definiert gemeinsam Koordinaten und Begriffe.',
+        gesIcon: '🛠',
         timerLock: false,
         showGridEarly: true,
+        reflection: 'Wie haben Standards und gemeinsame Begriffe die Präzision verändert? Was fehlte noch?',
     },
     {
-        title: 'Phase 4 – Coaching (Flow-Zustand)',
-        navDesc: 'Coache den Ausführenden durch gezieltes Fragen. Ziel: Null-Fehler-Produktion.',
-        exeWaitText: 'Aktive Begleitung erlaubt.',
-        exeWaitHint: 'Coaching-Modus aktiv. Du siehst das Spielfeld.',
-        exeIcon: '🎯',
+        title: 'Phase 4 – Coaching & Flow',
+        challengeTitle: 'Die Herausforderung: Coaching & Flow',
+        challengeDesc: 'Der Impulsgeber coacht durch gezieltes Fragen. Ziel: Null-Fehler-Produktion.',
+        impDesc: 'Coache den Gestalter durch gezieltes Fragen. Ziel: Null-Fehler-Produktion.',
+        gesWaitText: 'Aktive Begleitung erlaubt.',
+        gesWaitHint: 'Coaching-Modus aktiv. Du siehst das Spielfeld.',
+        gesIcon: '🎯',
         timerLock: false,
         showGridEarly: true,
+        reflection: 'Wie nah seid ihr der Null-Fehler-Produktion? Was war der entscheidende Unterschied zu Phase 1?',
     },
 ];
 
@@ -347,10 +326,8 @@ function mkRng(s) {
 
 function genSymbols(s) {
     const rng = mkRng(s);
-    // Assign one color per shape type — consistent within a game, varies per seed
     const colorMap = {};
     SHAPES.forEach(sh => { colorMap[sh] = COLORS[Math.floor(rng() * COLORS.length)]; });
-    // Pick 5 unique positions on 5x5
     const all = [];
     for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) all.push([r,c]);
     for (let i = all.length - 1; i > 0; i--) {
@@ -389,8 +366,8 @@ function mkUrl(obj) {
     for (const [k,v] of Object.entries(obj)) u.searchParams.set(k, v);
     return u.toString();
 }
-const navUrl = (s,p)    => mkUrl({seed:s, role:'nav', phase:p});
-const exeUrl = (s,p)    => mkUrl({seed:s, role:'exe', phase:p});
+const impUrl = (s,p)    => mkUrl({seed:s, role:'imp', phase:p});
+const gesUrl = (s,p)    => mkUrl({seed:s, role:'ges', phase:p});
 const resUrl = (s,p,st) => mkUrl({seed:s, phase:p, state:st});
 const encG   = g => btoa(JSON.stringify(g));
 const decG   = b => { try { return JSON.parse(atob(b)); } catch { return null; } };
@@ -413,15 +390,14 @@ function show(id) {
     symbols = genSymbols(seed);
 
     if (state) {
-        const ist = decG(state) || emptyGrid();
-        renderResult(symbols, ist, phase);
-    } else if (role === 'nav') {
-        renderNav(phase);
-    } else if (role === 'exe') {
+        renderResult(symbols, decG(state) || emptyGrid(), phase);
+    } else if (role === 'imp' || role === 'nav') {
+        renderImp(phase);
+    } else if (role === 'ges' || role === 'exe') {
         exeGrid = emptyGrid();
-        renderExe(phase);
+        renderGes(phase);
     } else {
-        showLobby();
+        showConnect();
     }
 })();
 
@@ -433,47 +409,49 @@ function newGame() {
     phase = 1;
     history.pushState({}, '', mkUrl({seed}));
     symbols = genSymbols(seed);
-    showLobby();
+    showConnect();
 }
 
-// ─── LOBBY ───────────────────────────────────────────────────────
-function showLobby() {
-    updateLobbyPhase();
-    show('s-lobby');
-}
-
-function updateLobbyPhase() {
+// ─── CONNECT ─────────────────────────────────────────────────────
+function showConnect() {
     const ph = PHASES[phase - 1];
-    document.getElementById('lobby-desc').innerHTML = `<strong>${ph.title}</strong><p style="margin-top:6px;">${ph.navDesc}</p>`;
-    document.getElementById('nav-url-txt').textContent = navUrl(seed, phase);
-    document.getElementById('exe-url-txt').textContent = exeUrl(seed, phase);
-    document.querySelectorAll('.ptab').forEach(t => t.classList.toggle('active', +t.dataset.p === phase));
-    renderQR(exeUrl(seed, phase));
+    document.getElementById('challenge-box').innerHTML = `
+        <div class="challenge-eyebrow">Phase ${phase} von ${PHASES.length}</div>
+        <div class="challenge-title">${ph.challengeTitle}</div>
+        <div class="challenge-desc">${ph.challengeDesc}</div>
+    `;
+    document.getElementById('seed-badge-el').textContent = seed;
+    const url = gesUrl(seed, phase);
+    document.getElementById('ges-url-txt').textContent = url;
+    renderQR(url);
+    show('s-connect');
 }
 
-function selPhase(n) { phase = n; updateLobbyPhase(); }
-function goLobby()   { history.pushState({}, '', mkUrl({seed})); showLobby(); }
+function goConnect() { history.pushState({}, '', mkUrl({seed})); showConnect(); }
 
-function copyUrl(role) {
-    const url = role === 'nav' ? navUrl(seed, phase) : exeUrl(seed, phase);
+function copyGesUrl() {
+    const url = gesUrl(seed, phase);
     navigator.clipboard.writeText(url).then(() => alert('Link kopiert! ✓')).catch(() => prompt('Manuell:', url));
 }
-function openAs(role) { location.href = role === 'nav' ? navUrl(seed, phase) : exeUrl(seed, phase); }
+
+function openAs(role) {
+    location.href = role === 'imp' ? impUrl(seed, phase) : gesUrl(seed, phase);
+}
 
 function renderQR(url) {
     const box = document.getElementById('qr-box');
     box.innerHTML = '';
     if (typeof QRCode !== 'undefined') {
-        new QRCode(box, {text:url, width:156, height:156, colorDark:'#2D2D2D', colorLight:'#ffffff'});
+        new QRCode(box, {text:url, width:148, height:148, colorDark:'#2D2D2D', colorLight:'#ffffff'});
     } else {
         box.innerHTML = '<p style="font-size:0.75rem;color:#aaa;margin-top:8px;">QR offline – Link manuell kopieren.</p>';
     }
 }
 
-// ─── NAVIGATOR ───────────────────────────────────────────────────
-function renderNav(ph) {
+// ─── IMPULSGEBER ─────────────────────────────────────────────────
+function renderImp(ph) {
     const p = PHASES[ph - 1];
-    document.getElementById('nav-banner').innerHTML = `<strong>${p.title}</strong><p style="margin-top:4px;">${p.navDesc}</p>`;
+    document.getElementById('nav-banner').innerHTML = `<strong>${p.title}</strong><p style="margin-top:4px;">${p.impDesc}</p>`;
     const tb = document.getElementById('nav-timer-box');
     tb.style.display = p.timerLock ? 'block' : 'none';
     if (p.timerLock) {
@@ -500,7 +478,6 @@ function renderFreeSpace(id, syms) {
     });
 }
 
-// Wait one frame for layout, then render (containerPx=0 before paint)
 window.addEventListener('load', () => {
     if (document.getElementById('s-nav').classList.contains('active')) {
         renderFreeSpace('nav-space', symbols);
@@ -527,19 +504,18 @@ function startNavTimer() {
     }, 1000);
 }
 
-// ─── EXECUTOR ────────────────────────────────────────────────────
-function renderExe(ph) {
+// ─── GESTALTER ───────────────────────────────────────────────────
+function renderGes(ph) {
     const p = PHASES[ph - 1];
-    // Phase 3 & 4: grid visible from the start
     if (p.showGridEarly) {
-        document.getElementById('exe-play-banner').innerHTML = `<strong>${p.title}</strong><p style="margin-top:4px;">${p.exeWaitText} ${p.exeWaitHint}</p>`;
+        document.getElementById('exe-play-banner').innerHTML = `<strong>${p.title}</strong><p style="margin-top:4px;">${p.gesWaitText} ${p.gesWaitHint}</p>`;
         renderExeGrid();
         show('s-exe-play');
     } else {
         document.getElementById('exe-wait-banner').innerHTML = `<strong>${p.title}</strong>`;
-        document.getElementById('exe-wait-icon').textContent = p.exeIcon;
-        document.getElementById('exe-wait-text').textContent = p.exeWaitText;
-        document.getElementById('exe-wait-hint').textContent = p.exeWaitHint;
+        document.getElementById('exe-wait-icon').textContent = p.gesIcon;
+        document.getElementById('exe-wait-text').textContent = p.gesWaitText;
+        document.getElementById('exe-wait-hint').textContent = p.gesWaitHint;
         const startBtn = document.getElementById('exe-start-btn');
         const cdEl     = document.getElementById('exe-countdown');
         if (p.timerLock) {
@@ -567,7 +543,7 @@ function renderExe(ph) {
 
 function startExe() {
     const p = PHASES[phase - 1];
-    document.getElementById('exe-play-banner').innerHTML = `<strong>${p.title}</strong><p style="margin-top:4px;">${p.exeWaitText}</p>`;
+    document.getElementById('exe-play-banner').innerHTML = `<strong>${p.title}</strong><p style="margin-top:4px;">${p.gesWaitText}</p>`;
     renderExeGrid();
     show('s-exe-play');
 }
@@ -600,7 +576,6 @@ function openPick(r, c) {
 }
 
 function refreshPicker() {
-    // Shapes
     const sr = document.getElementById('p-shapes');
     sr.innerHTML = '';
     SHAPES.forEach(sh => {
@@ -611,7 +586,6 @@ function refreshPicker() {
         b.onclick = () => { pickShape = sh; if (!HAS_ORIENT.has(sh)) pickOrient = 0; refreshPicker(); };
         sr.appendChild(b);
     });
-    // Colors
     const cr = document.getElementById('p-colors');
     cr.innerHTML = '';
     COLORS.forEach(col => {
@@ -622,7 +596,6 @@ function refreshPicker() {
         b.onclick = () => { pickColor = col; refreshPicker(); };
         cr.appendChild(b);
     });
-    // Orientations
     const ow = document.getElementById('p-orient-wrap');
     const or = document.getElementById('p-orients');
     if (!HAS_ORIENT.has(pickShape)) {
@@ -642,9 +615,7 @@ function refreshPicker() {
 }
 
 function confirmPick() {
-    if (pickCell) {
-        exeGrid[pickCell.r][pickCell.c] = { shape: pickShape, color: pickColor, orient: pickOrient };
-    }
+    if (pickCell) exeGrid[pickCell.r][pickCell.c] = { shape: pickShape, color: pickColor, orient: pickOrient };
     closePick(); renderExeGrid();
 }
 function clearCell() {
@@ -658,10 +629,8 @@ document.getElementById('picker').addEventListener('click', e => { if (e.target.
 function renderResult(syms, ist, ph) {
     document.getElementById('result-phase-lbl').textContent = PHASES[ph - 1].title;
 
-    // Soll: free space (rendered after layout — see window.load above)
     setTimeout(() => renderFreeSpace('r-soll', syms), 50);
 
-    // Ist: grid with colour coding
     const istEl = document.getElementById('r-ist');
     istEl.innerHTML = '';
     for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
@@ -682,44 +651,51 @@ function renderResult(syms, ist, ph) {
         istEl.appendChild(d);
     }
 
-    // Per-symbol scoring table
     let totalPts = 0, maxPts = 0;
     const tbody = document.getElementById('score-body');
     tbody.innerHTML = '';
     syms.forEach(s => {
-        const placed = ist && ist[s.row] && ist[s.row][s.col];
+        const placed  = ist && ist[s.row] && ist[s.row][s.col];
         const posOk   = !!placed;
         const shapeOk = placed && placed.shape === s.shape;
         const colorOk = placed && placed.color === s.color;
-        const orientOk = !HAS_ORIENT.has(s.shape) || (placed && placed.orient === s.orient);
-        const hasO = HAS_ORIENT.has(s.shape);
-
+        const hasO    = HAS_ORIENT.has(s.shape);
+        const orientOk = !hasO || (placed && placed.orient === s.orient);
         const pts = (posOk?1:0) + (shapeOk?1:0) + (colorOk?1:0) + (hasO && orientOk?1:0);
         const max = 2 + (hasO ? 2 : 1);
         totalPts += pts; maxPts += max;
-
         const t = v => v ? '<span class="tick">✓</span>' : '<span class="cross">✗</span>';
         const nm = `${SLBL[s.shape]}<br><small style="color:#888">${CLBL[s.color]}${hasO?' · '+s.orient+'°':''}</small>`;
         tbody.innerHTML += `<tr>
-            <td>${nm}</td>
-            <td>${t(posOk)}</td>
-            <td>${t(shapeOk)}</td>
-            <td>${t(colorOk)}</td>
+            <td>${nm}</td><td>${t(posOk)}</td><td>${t(shapeOk)}</td><td>${t(colorOk)}</td>
             <td>${hasO ? t(orientOk) : '<span class="dash">–</span>'}</td>
         </tr>`;
     });
 
-    const pct = Math.round((totalPts / maxPts) * 100);
+    const pct  = Math.round((totalPts / maxPts) * 100);
     const pCol = pct >= 80 ? 'var(--success)' : pct >= 50 ? '#e65100' : 'var(--error)';
-    document.getElementById('lean-box').innerHTML = `
-        <strong>Lean Scorecard · ${PHASES[ph-1].title.split(' – ')[0]}</strong>
+    const nextP = Math.min(ph + 1, PHASES.length);
+    document.getElementById('scorecard-box').innerHTML = `
+        <strong>Scorecard · ${PHASES[ph-1].title.split(' – ')[0]}</strong>
         <p style="margin-top:6px;">Gesamtpunkte: <strong style="color:${pCol}">${totalPts} / ${maxPts} (${pct}%)</strong></p>
         <p style="margin-top:6px;">${
-            pct === 100 ? '🏆 Null-Fehler-Produktion! Prozess perfekt.' :
+            pct === 100 ? '🏆 Null-Fehler-Produktion! Kommunikation perfekt.' :
             pct >= 80   ? '📈 Sehr gut – minimaler Kommunikations-Gap.' :
-            pct >= 50   ? '⚠️ Deutlicher Gap. Workshop empfohlen (Phase 3).' :
-                          '🚨 Kritischer Präzisions-Verlust. Weiter zu Phase 3 & 4!'
+            pct >= 50   ? `⚠️ Deutlicher Gap – weiter zu Phase ${nextP}.` :
+                          `🚨 Kritischer Präzisionsverlust – weiter zu Phase ${nextP}!`
         }</p>`;
+
+    const reflectEl = document.getElementById('reflect-box');
+    reflectEl.style.display = 'block';
+    reflectEl.innerHTML = `<strong>Reflexion</strong><p>${PHASES[ph-1].reflection}</p>`;
+
+    const nextBtn = document.getElementById('next-phase-btn');
+    if (ph < PHASES.length) {
+        nextBtn.style.display = 'block';
+        nextBtn.textContent = `→ Weiter zu Phase ${ph + 1}`;
+    } else {
+        nextBtn.style.display = 'none';
+    }
 
     show('s-result');
 }
@@ -731,10 +707,10 @@ function shareResult() {
 }
 
 function nextPhase() {
-    phase = Math.min(phase + 1, 4);
+    phase = Math.min(phase + 1, PHASES.length);
     exeGrid = emptyGrid();
     history.pushState({}, '', mkUrl({seed}));
-    showLobby();
+    showConnect();
 }
 
 if ('serviceWorker' in navigator) {
