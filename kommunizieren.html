@@ -284,12 +284,14 @@
 <script>
 // ─── CONFIG ──────────────────────────────────────────────────────
 const SHAPES   = ['circle','square','triangle','rectangle','ellipse'];
-const COLORS   = ['red','blue','yellow','green','orange','violet'];
+const COLORS   = ['red','blue','yellow'];
 const ORIENTS  = [0, 90, 180, 270];
 const HAS_ORIENT = new Set(['triangle','rectangle','ellipse']);
-const CHEX  = { red:'#e53935', blue:'#1e88e5', yellow:'#FFB700', green:'#43a047', orange:'#fb8c00', violet:'#7b1fa2' };
+const CHEX  = { red:'#e53935', blue:'#1e88e5', yellow:'#FFB700' };
 const SLBL  = { circle:'Kreis', square:'Quadrat', triangle:'Dreieck', rectangle:'Rechteck', ellipse:'Ellipse' };
-const CLBL  = { red:'Rot', blue:'Blau', yellow:'Gelb', green:'Grün', orange:'Orange', violet:'Violett' };
+const CLBL  = { red:'Rot', blue:'Blau', yellow:'Gelb' };
+// triangle: 4 orientations; rectangle + ellipse: only 2 (0/90 are visually distinct, 180/270 are redundant)
+function orientCount(shape) { return shape === 'triangle' ? 4 : (HAS_ORIENT.has(shape) ? 2 : 1); }
 const OLBL  = { 0:'0°', 90:'90°', 180:'180°', 270:'270°' };
 
 const PHASES = [
@@ -345,7 +347,10 @@ function mkRng(s) {
 
 function genSymbols(s) {
     const rng = mkRng(s);
-    // pick 5 unique positions on 5x5
+    // Assign one color per shape type — consistent within a game, varies per seed
+    const colorMap = {};
+    SHAPES.forEach(sh => { colorMap[sh] = COLORS[Math.floor(rng() * COLORS.length)]; });
+    // Pick 5 unique positions on 5x5
     const all = [];
     for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) all.push([r,c]);
     for (let i = all.length - 1; i > 0; i--) {
@@ -354,8 +359,9 @@ function genSymbols(s) {
     }
     return all.slice(0, 5).map(([row, col]) => {
         const shape  = SHAPES[Math.floor(rng() * SHAPES.length)];
-        const color  = COLORS[Math.floor(rng() * COLORS.length)];
-        const orient = HAS_ORIENT.has(shape) ? ORIENTS[Math.floor(rng() * 4)] : 0;
+        const color  = colorMap[shape];
+        const oc     = orientCount(shape);
+        const orient = oc > 1 ? ORIENTS[Math.floor(rng() * oc)] : 0;
         return { row, col, shape, color, orient };
     });
 }
@@ -624,7 +630,7 @@ function refreshPicker() {
     } else {
         ow.style.display = 'block';
         or.innerHTML = '';
-        ORIENTS.forEach(deg => {
+        ORIENTS.slice(0, orientCount(pickShape)).forEach(deg => {
             const b = document.createElement('button');
             b.className = 'pbtn' + (pickOrient === deg ? ' sel' : '');
             b.innerHTML = shapeSvg(pickShape, pickColor || 'blue', deg, 30);
