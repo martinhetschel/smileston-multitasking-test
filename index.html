@@ -778,7 +778,6 @@
             buildStaticKeyboard();
         } else if (phase === 2) {
             buildStaticKeyboard();
-            if (gameJourney !== 'lean') updateKeyboardFor5S();
         } else if (phase === 3) {
             buildStaticKeyboard();
             updateKeyboardFor5S();
@@ -1143,9 +1142,7 @@
             scrollGridIntoView();
 
             if (currentPhase >= 2 && columnFinished && activeCol < COLS) {
-                if (currentPhase === 2 && gameJourney !== 'lean') {
-                    updateKeyboardFor5S();
-                } else if (currentPhase === 3) {
+                if (currentPhase === 3) {
                     updateKeyboardFor5S();
                 } else if (currentPhase === 4) {
                     buildSortedKeyboard();
@@ -1187,7 +1184,7 @@
             } else {
                 setTransitionScreen(
                     'Phase 1 beendet',
-                    'Ihre Zeit wurde erfasst.<br><br><strong>Runde 2: Spaltenweise (Flow) + 5S</strong><br><br>Füllen Sie das Raster nun <strong>Spalte für Spalte</strong> aus. Nicht benötigte Tasten werden ausgeblendet.',
+                    'Ihre Zeit wurde erfasst.<br><br><strong>Runde 2: Spaltenweise (Flow)</strong><br><br>Füllen Sie das Raster nun <strong>Spalte für Spalte</strong> aus – mit der vollen Tastatur. Kein Multitasking mehr!',
                     'Phase 2 starten', 2
                 );
             }
@@ -1239,7 +1236,7 @@
         const phaseCount = isLean ? 5 : 2;
         const phaseLabels = isLean
             ? ['Zeilen / Multitasking', 'Flow (spaltenweise)', '5S-Modus', 'Ergonomie', 'Pick-by-Light']
-            : ['Zeilen / Multitasking', 'Flow + 5S'];
+            : ['Zeilen / Multitasking', 'Spalten / Flow'];
         const phaseTimes = isLean
             ? [timePhase1, timePhase2, timePhase3, timePhase4, timePhase5]
             : [timePhase1, timePhase2];
@@ -1285,7 +1282,7 @@
             explain += ' In Runde 4 (Ergonomie) wurden die aktiven Tasten in logischer Reihenfolge angeordnet – das visuelle Suchen entfiel komplett.';
             explain += ' In Runde 5 (Pick-by-Light) leuchtete die nächste Taste aktiv auf: Zero kognitive Belastung, maximale Prozessgeschwindigkeit.';
         } else {
-            explain += ' In Runde 2 haben wir die 5S-Methode angewendet: nur die Werkzeuge, die Sie gerade brauchen – kein Suchen, kein Ablenken.';
+            explain += ' In Runde 2 haben wir das Multitasking eliminiert: spaltenweises Arbeiten, volle Tastatur – aber kein ständiges Umschalten der Aufmerksamkeit mehr.';
         }
         if (gameMode === 'hardcore') {
             explain += ' Sie haben diese Runde unter erschwerten Bedingungen absolviert (umgekehrte Reihenfolge). In der Arbeitsrealität steht dies für fehlende Standards oder schlechte Ergonomie: Ungewöhnliche Abläufe verzögern den Prozess und zwingen das Gehirn zu unnötiger Zusatzarbeit.';
