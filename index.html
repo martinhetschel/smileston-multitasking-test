@@ -611,6 +611,7 @@
 
             <button class="btn" onclick="startGame(1)">Phase 1 starten</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
+            <div style="font-size: 0;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
         </div>
 
         <div id="transition-screen" class="screen">
@@ -646,6 +647,7 @@
 
             <button class="btn" style="background-color: var(--bg); color: var(--anthracite); border: 2px solid var(--anthracite);" onclick="location.reload()">Neuer Versuch</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
+            <div style="font-size: 0;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
         </div>
     </div>
 </div>
@@ -1165,7 +1167,7 @@
             void countdownNumberEl.offsetWidth;
             countdownNumberEl.style.animation = 'countdownPop 0.8s ease-out forwards';
             countdownNumberEl.textContent = sequence[idx];
-            playSound('dok');
+            playSound('bell');
             idx++;
 
             if (idx < sequence.length) {
