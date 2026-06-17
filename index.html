@@ -353,7 +353,7 @@
         /* Deadline-Timer Fortschrittsbalken */
         #deadline-bar {
             width: 100%;
-            height: 5px;
+            height: 10px;
             background-color: var(--panel);
             flex-shrink: 0;
             margin-top: auto;
@@ -444,6 +444,19 @@
         @keyframes countdownPop {
             from { transform: scale(0.3); opacity: 0; }
             to   { transform: scale(1);   opacity: 1; }
+        }
+
+        /* Pick-by-Light (Phase 4) */
+        @keyframes pickLight {
+            0%, 100% { background-color: var(--yellow); border-color: var(--anthracite); }
+            50%       { background-color: #ffd04d;       border-color: var(--yellow); }
+        }
+
+        .key.pick-by-light {
+            background-color: var(--yellow);
+            border-color: var(--anthracite);
+            color: var(--anthracite);
+            animation: pickLight 0.9s ease-in-out infinite;
         }
 
     </style>
@@ -540,35 +553,32 @@
     </header>
 
     <div class="content-area">
-        <div id="start-screen" class="screen active">
+        <div id="start-screen" class="screen active" style="height: auto; min-height: 100%; justify-content: flex-start; padding-top: 20px;">
             <h1>Auf die Plätze, fertig, los!</h1>
-            <p><strong>Runde 1: Zeilenweise (Multitasking)</strong><br><br>
-            Füllen Sie das Raster <strong>Zeile für Zeile</strong> aus (von links nach rechts). Die Tastatur bleibt dabei starr.</p>
-
-            <p class="hint">Die ersten 5 Zeilen sind bereits als Orientierungshilfe vorausgefüllt. Sie starten in Zeile 6.</p>
+            <p><strong>Wähle deine Trainings-Reise</strong></p>
 
             <div class="mode-selector">
+                <button type="button" class="mode-btn active" data-journey="multitasking" onclick="selectJourney('multitasking')">Multitasking-Test</button>
+                <button type="button" class="mode-btn" data-journey="lean" onclick="selectJourney('lean')">Lean-Exzellenz</button>
+            </div>
+            <p class="toggle-hint">Lean-Exzellenz: 4 Phasen – Flow/5S, Ergonomie &amp; Pick-by-Light.</p>
+
+            <div class="mode-selector" style="margin-top: 12px;">
                 <button type="button" class="mode-btn active" data-mode="standard" onclick="selectMode('standard')">Standard</button>
                 <button type="button" class="mode-btn" data-mode="hardcore" onclick="selectMode('hardcore')">Hardcore</button>
             </div>
-            <p class="toggle-hint">Hardcore: Eingabe der Zeichen in umgekehrter Reihenfolge (von unten nach oben).</p>
+            <p class="toggle-hint">Hardcore: Eingabe der Zeichen in umgekehrter Reihenfolge.</p>
 
-            <div class="mode-selector">
-                <button type="button" class="mode-btn active" data-fives="off" onclick="selectFiveS('off')">Ohne 5S</button>
-                <button type="button" class="mode-btn" data-fives="on" onclick="selectFiveS('on')">Mit 5S</button>
-            </div>
-            <p class="toggle-hint">Blendet in Phase 2 nicht benötigte Werkzeuge aus.</p>
+            <p class="hint">Die ersten 5 Zeilen sind bereits als Orientierungshilfe vorausgefüllt. Sie starten in Zeile 6.</p>
 
             <button class="btn" onclick="startGame(1)">Phase 1 starten</button>
+            <div style="height: 60px; flex-shrink: 0;"></div>
         </div>
 
         <div id="transition-screen" class="screen">
-            <h1>Phase 1 beendet</h1>
-            <p>Ihre Zeit wurde erfasst.<br><br>
-            <strong>Runde 2: Spaltenweise (Flow)</strong><br><br>
-            Füllen Sie das Raster nun <strong>Spalte für Spalte</strong> aus (von oben nach unten). Zuerst alle Zahlen, dann die Buchstaben, zuletzt die Symbole.</p>
-
-            <button class="btn" onclick="startGame(2)">Phase 2 starten</button>
+            <h1 id="transTitle">Phase 1 beendet</h1>
+            <p id="transDesc"></p>
+            <button class="btn" id="transBtn">Phase 2 starten</button>
         </div>
 
         <div id="game-screen" class="screen" style="justify-content: flex-start;">
@@ -580,14 +590,7 @@
         <div id="end-screen" class="screen" style="height: auto; min-height: 100%; justify-content: flex-start; padding-top: 20px;">
             <h1>Auswertung</h1>
             <div id="stats">
-                <div class="stat-row"><span>Modus:</span> <strong id="statMode">Standard</strong></div>
-                <div class="stat-row"><span>Runde 1 (Zeilen):</span> <strong id="time1">0.0 s</strong></div>
-                <div class="stat-row"><span>Runde 2 (Spalten):</span> <strong id="time2">0.0 s</strong></div>
-                <div class="stat-row" style="margin-top: 10px; border-top: 2px solid var(--anthracite); padding-top: 10px;">
-                    <span>Zeitersparnis:</span> <strong id="diff">0.0 s (0%)</strong>
-                </div>
-                <div class="stat-row"><span>Überstunden Phase 1:</span> <strong id="ext1">–</strong></div>
-                <div class="stat-row"><span>Überstunden Phase 2:</span> <strong id="ext2">–</strong></div>
+                <!-- wird dynamisch von buildEndScreen() befüllt -->
             </div>
 
             <p class="hint" id="explainText" style="margin-bottom: 15px;"></p>
@@ -604,6 +607,7 @@
             </div>
 
             <button class="btn" style="background-color: var(--bg); color: var(--anthracite); border: 2px solid var(--anthracite);" onclick="location.reload()">Neuer Versuch</button>
+            <div style="height: 60px; flex-shrink: 0;"></div>
         </div>
     </div>
 </div>
@@ -636,7 +640,7 @@
     }
 
     let gameMode = 'standard';
-    let is5sMode = false;
+    let gameJourney = 'multitasking'; // 'multitasking' (2 Phasen) | 'lean' (4 Phasen)
     let LETTERS_FULL = [];
     let REQUIRED_LETTERS = [];
 
@@ -647,10 +651,10 @@
         });
     }
 
-    function selectFiveS(value) {
-        is5sMode = value === 'on';
-        document.querySelectorAll('.mode-btn[data-fives]').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.fives === value);
+    function selectJourney(journey) {
+        gameJourney = journey;
+        document.querySelectorAll('.mode-btn[data-journey]').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.journey === journey);
         });
     }
 
@@ -661,12 +665,16 @@
     let startTime = 0;
     let timePhase1 = 0;
     let timePhase2 = 0;
+    let timePhase3 = 0;
+    let timePhase4 = 0;
     let inputLocked = false;
     let windowStart = 0;
     let scrollAnimFrame = null;
 
     let phase1Extensions = 0;
     let phase2Extensions = 0;
+    let phase3Extensions = 0;
+    let phase4Extensions = 0;
     let deadlinePaused = false;
     let deadlineStartTime = 0;
     let deadlineRafId = null;
@@ -715,12 +723,18 @@
             REQUIRED_LETTERS = LETTERS_FULL.slice(START_ROW);
             phase1Extensions = 0;
             phase2Extensions = 0;
-        } else {
+            phase3Extensions = 0;
+            phase4Extensions = 0;
+        } else if (phase === 2) {
             phase2Extensions = 0;
+        } else if (phase === 3) {
+            phase3Extensions = 0;
+        } else if (phase === 4) {
+            phase4Extensions = 0;
         }
 
         gridData = Array(ROWS).fill().map(() => Array(COLS).fill(''));
-        for(let r = 0; r < START_ROW; r++) {
+        for (let r = 0; r < START_ROW; r++) {
             gridData[r][0] = getExpectedValue(r, 0);
             gridData[r][1] = getExpectedValue(r, 1);
             gridData[r][2] = getExpectedValue(r, 2);
@@ -737,9 +751,11 @@
 
         showScreen('game-screen');
 
-        buildStaticKeyboard();
-        if (phase === 2 && is5sMode) {
-            updateKeyboardFor5S();
+        if (phase <= 2) {
+            buildStaticKeyboard();
+            if (phase === 2) updateKeyboardFor5S();
+        } else {
+            buildSortedKeyboard();
         }
         initCanvas();
         drawGrid();
@@ -747,6 +763,7 @@
         runCountdown(() => {
             startTime = performance.now();
             startDeadlineTimer();
+            if (phase === 4) highlightNextKey();
         });
     }
 
@@ -895,14 +912,52 @@
         });
     }
 
-    // 5S: in Phase 2 sind nur die Tasten der aktuellen Spalte (Zahlen/Buchstaben/
-    // Symbole) aktiv, der Rest wird ausgegraut und gesperrt (pointer-events: none).
+    // 5S: nur Tasten der aktiven Spalte bleiben aktiv, der Rest wird gesperrt.
     function updateKeyboardFor5S() {
         const neededSets = [REQUIRED_NUMBERS, REQUIRED_LETTERS, REQUIRED_EMOJIS];
         const needed = neededSets[activeCol];
-
         keyboardEl.querySelectorAll('.key').forEach(btn => {
             btn.classList.toggle('disabled', !needed.includes(btn.innerText));
+        });
+    }
+
+    // Phase 3/4: aktive Tasten in logischer Spielreihenfolge, Rest disabled.
+    function buildSortedKeyboard() {
+        keyboardEl.innerHTML = '';
+
+        const sortedSets = [
+            REQUIRED_NUMBERS.slice().sort((a, b) => parseInt(a) - parseInt(b)),
+            [...REQUIRED_LETTERS],
+            [...REQUIRED_EMOJIS],
+        ];
+        const sortedActive = sortedSets[activeCol];
+        const otherKeys = shuffle(
+            [...REQUIRED_NUMBERS, ...REQUIRED_LETTERS, ...REQUIRED_EMOJIS]
+            .filter(k => !sortedActive.includes(k))
+        );
+
+        [...sortedActive, ...otherKeys].forEach(keyVal => {
+            const btn = document.createElement('div');
+            btn.className = 'key';
+            btn.innerText = keyVal;
+            btn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                handleKeyPress(keyVal, btn);
+            });
+            keyboardEl.appendChild(btn);
+        });
+
+        updateKeyboardFor5S();
+    }
+
+    // Phase 4: hebt die nächste erwartete Taste hervor.
+    function highlightNextKey() {
+        const expected = getExpectedValue(activeRow, activeCol);
+        keyboardEl.querySelectorAll('.key').forEach(btn => {
+            btn.classList.toggle(
+                'pick-by-light',
+                btn.innerText === expected && !btn.classList.contains('disabled')
+            );
         });
     }
 
@@ -943,8 +998,10 @@
 
     function triggerDeadline() {
         if (!document.getElementById('game-screen').classList.contains('active')) return;
-        if (currentPhase === 1) phase1Extensions++;
-        else phase2Extensions++;
+        if      (currentPhase === 1) phase1Extensions++;
+        else if (currentPhase === 2) phase2Extensions++;
+        else if (currentPhase === 3) phase3Extensions++;
+        else                          phase4Extensions++;
         deadlinePaused = true;
         deadlineOverlayEl.classList.add('active');
     }
@@ -998,6 +1055,7 @@
         if (val === expected) {
             gridData[activeRow][activeCol] = val;
 
+            btnElement.classList.remove('pick-by-light');
             btnElement.classList.remove('pop-pulse');
             void btnElement.offsetWidth;
             btnElement.classList.add('pop-pulse');
@@ -1032,7 +1090,7 @@
     }
 
     function advanceCursor() {
-        let columnFinishedPhase2 = false;
+        let columnFinished = false;
 
         if (currentPhase === 1) {
             activeCol++;
@@ -1045,24 +1103,36 @@
             if (activeRow >= ROWS) {
                 activeRow = START_ROW;
                 activeCol++;
-                columnFinishedPhase2 = true; // Markiere Spaltenwechsel
+                columnFinished = true;
             }
         }
 
         if ((currentPhase === 1 && activeRow >= ROWS) ||
-            (currentPhase === 2 && activeCol >= COLS)) {
+            (currentPhase >= 2 && activeCol >= COLS)) {
             finishPhase();
         } else {
             scrollGridIntoView();
 
-            // Wenn in Phase 2 eine Spalte beendet wurde (aber noch nicht das ganze Spiel)
-            if (currentPhase === 2 && columnFinishedPhase2 && activeCol < COLS) {
-                if (is5sMode) {
+            if (currentPhase >= 2 && columnFinished && activeCol < COLS) {
+                if (currentPhase === 2) {
                     updateKeyboardFor5S();
+                } else {
+                    buildSortedKeyboard();
                 }
+                if (currentPhase === 4) highlightNextKey();
                 triggerSuccessOverlay(activeCol);
+            } else if (currentPhase === 4) {
+                highlightNextKey();
             }
         }
+    }
+
+    function setTransitionScreen(title, descHTML, btnText, nextPhase) {
+        document.getElementById('transTitle').textContent = title;
+        document.getElementById('transDesc').innerHTML = descHTML;
+        const btn = document.getElementById('transBtn');
+        btn.textContent = btnText;
+        btn.onclick = () => startGame(nextPhase);
     }
 
     function finishPhase() {
@@ -1071,69 +1141,112 @@
         drawGrid();
         keyboardEl.innerHTML = '';
 
-        const endTime = performance.now();
-        const duration = ((endTime - startTime) / 1000);
+        const duration = (performance.now() - startTime) / 1000;
 
         if (currentPhase === 1) {
             timePhase1 = duration;
+            setTransitionScreen(
+                'Phase 1 beendet',
+                'Ihre Zeit wurde erfasst.<br><br><strong>Runde 2: Spaltenweise (Flow) + 5S</strong><br><br>Füllen Sie das Raster nun <strong>Spalte für Spalte</strong> aus. Nicht benötigte Tasten werden ausgeblendet.',
+                'Phase 2 starten', 2
+            );
             setTimeout(() => showScreen('transition-screen'), 500);
-        } else {
+
+        } else if (currentPhase === 2 && gameJourney === 'lean') {
             timePhase2 = duration;
+            setTransitionScreen(
+                'Phase 2 beendet',
+                'Stark! Jetzt kommt die Ergonomie-Stufe.<br><br><strong>Runde 3: Ergonomie</strong><br><br>Die 5S-Filterung bleibt aktiv. Die aktiven Tasten erscheinen nun in <strong>logischer, sortierter Reihenfolge</strong> – kein Suchen mehr nötig.',
+                'Phase 3 starten', 3
+            );
+            setTimeout(() => showScreen('transition-screen'), 500);
 
-            const modeLabel = (gameMode === 'hardcore' ? 'Hardcore' : 'Standard') + (is5sMode ? ' + 5S' : '');
-            document.getElementById('statMode').innerText = modeLabel;
+        } else if (currentPhase === 3) {
+            timePhase3 = duration;
+            setTransitionScreen(
+                'Phase 3 beendet',
+                'Exzellent! Jetzt die Königsdisziplin.<br><br><strong>Runde 4: Pick-by-Light</strong><br><br>Die nächste zu drückende Taste <strong>leuchtet aktiv auf</strong>. Zero kognitive Belastung – maximale Prozessgeschwindigkeit.',
+                'Phase 4 starten', 4
+            );
+            setTimeout(() => showScreen('transition-screen'), 500);
 
-            let explainText = 'Warum waren Sie in Phase 2 so viel schneller? Multitasking kostet enorme Energie, da das Gehirn ständig "umrüsten" muss.';
-            if (is5sMode) {
-                explainText += ' Zusätzlich haben wir in Runde 2 die 5S-Methode angewendet: Sie hatten nur die Werkzeuge vor sich, die Sie im Moment wirklich brauchten. Visueller Ballast war ausgeblendet. Kein Suchen, kein Ablenken – nur reiner Fokus.';
-            }
-            if (gameMode === 'hardcore') {
-                explainText += ' Sie haben diese Runde unter erschwerten Bedingungen absolviert (umgekehrte Reihenfolge). In der Arbeitsrealität steht dies für fehlende Standards oder schlechte Ergonomie. Wie Sie soeben am eigenen Leib gespürt haben: Ungewöhnliche und umständliche Arbeitsabläufe verzögern den Prozess deutlich und zwingen das Gehirn zu unnötiger Zusatzarbeit.';
-            }
-            document.getElementById('explainText').innerText = explainText;
-
-            document.getElementById('time1').innerText = timePhase1.toFixed(1) + ' s';
-            document.getElementById('time2').innerText = timePhase2.toFixed(1) + ' s';
-
-            const diffAbs = (timePhase1 - timePhase2).toFixed(1);
-            const diffPercent = (((timePhase1 - timePhase2) / timePhase1) * 100).toFixed(1);
-
-            const diffEl = document.getElementById('diff');
-
-            // Share Text generieren
-            let shareText = `Ich habe den Smilestone Konzentrationstest gemacht und folgendes Ergebnis erzielt:\n\n`;
-            shareText += `Modus: ${modeLabel}\n`;
-
-            if(timePhase1 > timePhase2) {
-                diffEl.innerText = `${diffAbs} s (${diffPercent}%) schneller!`;
-                diffEl.className = 'highlight-green';
-                shareText += `Zeitersparnis: ${diffAbs} s (${diffPercent}%)\n`;
-                shareText += `Im Flow (spaltenweise) war ich ${diffPercent}% schneller! 🚀\n`;
-            } else if (timePhase1 < timePhase2) {
-                diffEl.innerText = `${Math.abs(diffAbs)} s (${Math.abs(diffPercent)}%) langsamer`;
-                diffEl.className = 'highlight-red';
-                shareText += `Zeitersparnis: ${Math.abs(diffAbs)} s (${Math.abs(diffPercent)}%) langsamer\n`;
-                shareText += `Ich war zeilenweise sogar ${Math.abs(diffPercent)}% schneller. Mein Gehirn ist ein Multitasking-Wunder! 🤯\n`;
-            } else {
-                diffEl.innerText = `Gleich schnell (0%)`;
-                diffEl.className = '';
-                shareText += `Zeitersparnis: 0 s (0%)\n`;
-                shareText += `Ich war in beiden Runden exakt gleich schnell! ⚖️\n`;
-            }
-
-            shareText += `Überstunden Phase 1: ${phase1Extensions === 0 ? 'keine' : phase1Extensions + '×'}\n`;
-            shareText += `Überstunden Phase 2: ${phase2Extensions === 0 ? 'keine' : phase2Extensions + '×'}\n`;
-            shareText += `\nVersuche es doch auch: ${window.location.origin}${window.location.pathname}`;
-
-            document.getElementById('ext1').innerText = phase1Extensions === 0 ? 'keine ✓' : `${phase1Extensions}× Überstunden`;
-            document.getElementById('ext2').innerText = phase2Extensions === 0 ? 'keine ✓' : `${phase2Extensions}× Überstunden`;
-
-            // Share Links befüllen
-            document.getElementById('share-wa').href = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
-            document.getElementById('share-mail').href = `mailto:?subject=${encodeURIComponent("Smilestone Konzentrationstest")}&body=${encodeURIComponent(shareText)}`;
-
+        } else {
+            if (currentPhase === 2) timePhase2 = duration;
+            else timePhase4 = duration;
+            buildEndScreen();
             setTimeout(() => showScreen('end-screen'), 500);
         }
+    }
+
+    function buildEndScreen() {
+        const isLean = gameJourney === 'lean';
+        const lastTime = isLean ? timePhase4 : timePhase2;
+        const modeLabel = (isLean ? 'Lean-Exzellenz' : 'Multitasking-Test') +
+                          (gameMode === 'hardcore' ? ' (Hardcore)' : '');
+        const extArr = [phase1Extensions, phase2Extensions, phase3Extensions, phase4Extensions];
+        const phaseCount = isLean ? 4 : 2;
+        const phaseLabels = ['Zeilen / Multitasking', 'Flow + 5S', 'Ergonomie', 'Pick-by-Light'];
+        const phaseTimes = [timePhase1, timePhase2, timePhase3, timePhase4];
+
+        const diffAbs  = (timePhase1 - lastTime).toFixed(1);
+        const diffPct  = (((timePhase1 - lastTime) / timePhase1) * 100).toFixed(1);
+
+        let diffClass, diffText, shareResult;
+        if (timePhase1 > lastTime) {
+            diffClass   = 'highlight-green';
+            diffText    = `${diffAbs} s (${diffPct}%) schneller!`;
+            shareResult = `Im Flow war ich ${diffPct}% schneller! 🚀`;
+        } else if (timePhase1 < lastTime) {
+            diffClass   = 'highlight-red';
+            diffText    = `${Math.abs(diffAbs)} s (${Math.abs(diffPct)}%) langsamer`;
+            shareResult = `Ich war zeilenweise sogar ${Math.abs(diffPct)}% schneller. Mein Gehirn ist ein Multitasking-Wunder! 🤯`;
+        } else {
+            diffClass   = '';
+            diffText    = 'Gleich schnell (0%)';
+            shareResult = 'Ich war in allen Runden exakt gleich schnell! ⚖️';
+        }
+
+        // --- Stat-Rows HTML ---
+        let html = `<div class="stat-row"><span>Modus:</span> <strong>${modeLabel}</strong></div>`;
+        for (let p = 0; p < phaseCount; p++) {
+            html += `<div class="stat-row"><span>Runde ${p+1} (${phaseLabels[p]}):</span> <strong>${phaseTimes[p].toFixed(1)} s</strong></div>`;
+        }
+        const compareLabel = isLean ? 'Ersparnis (Runde 4 vs. 1):' : 'Zeitersparnis:';
+        html += `<div class="stat-row" style="margin-top:10px;border-top:2px solid var(--anthracite);padding-top:10px;">
+                    <span>${compareLabel}</span> <strong class="${diffClass}">${diffText}</strong>
+                 </div>`;
+        for (let p = 0; p < phaseCount; p++) {
+            const v = extArr[p];
+            html += `<div class="stat-row"><span>Überstunden Runde ${p+1}:</span> <strong>${v === 0 ? 'keine ✓' : v + '× Überstunden'}</strong></div>`;
+        }
+        document.getElementById('stats').innerHTML = html;
+
+        // --- Erklärungstext ---
+        let explain = 'Warum waren Sie im Vergleich zu Runde 1 so viel schneller? Multitasking kostet enorme Energie, da das Gehirn ständig "umrüsten" muss.';
+        explain += ' In Runde 2 haben wir die 5S-Methode angewendet: nur die Werkzeuge, die Sie gerade brauchen – kein Suchen, kein Ablenken.';
+        if (isLean) {
+            explain += ' In Runde 3 (Ergonomie) wurden die aktiven Tasten in logischer Reihenfolge angeordnet – das visuelle Suchen entfiel komplett.';
+            explain += ' In Runde 4 (Pick-by-Light) leuchtete die nächste Taste aktiv auf: Zero kognitive Belastung, maximale Prozessgeschwindigkeit.';
+        }
+        if (gameMode === 'hardcore') {
+            explain += ' Sie haben diese Runde unter erschwerten Bedingungen absolviert (umgekehrte Reihenfolge). In der Arbeitsrealität steht dies für fehlende Standards oder schlechte Ergonomie: Ungewöhnliche Abläufe verzögern den Prozess und zwingen das Gehirn zu unnötiger Zusatzarbeit.';
+        }
+        document.getElementById('explainText').innerText = explain;
+
+        // --- Share-Text ---
+        let share = `Ich habe den Smilestone Konzentrationstest gemacht:\n\nModus: ${modeLabel}\n`;
+        for (let p = 0; p < phaseCount; p++) {
+            share += `Runde ${p+1}: ${phaseTimes[p].toFixed(1)} s\n`;
+        }
+        share += `${compareLabel.replace(':', '')} ${diffText}\n${shareResult}\n`;
+        for (let p = 0; p < phaseCount; p++) {
+            const v = extArr[p];
+            share += `Überstunden Runde ${p+1}: ${v === 0 ? 'keine' : v + '×'}\n`;
+        }
+        share += `\nVersuche es doch auch: ${window.location.origin}${window.location.pathname}`;
+
+        document.getElementById('share-wa').href   = `https://api.whatsapp.com/send?text=${encodeURIComponent(share)}`;
+        document.getElementById('share-mail').href = `mailto:?subject=${encodeURIComponent('Smilestone Konzentrationstest')}&body=${encodeURIComponent(share)}`;
     }
 
     function handleViewportResize() {
