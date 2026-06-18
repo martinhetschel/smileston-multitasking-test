@@ -790,7 +790,7 @@
             <div style="height: 40px; flex-shrink: 0;"></div>
             <div id="start-qr" style="display:flex;justify-content:center;"></div>
             <p class="hint" style="font-size:0.7rem;color:#bbb;margin-top:6px;">Zum Teilen scannen</p>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v1.0</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v3.0</p>
         </div>
 
         <div id="transition-screen" class="screen">
@@ -826,7 +826,7 @@
 
             <button class="btn" style="background-color: var(--bg); color: var(--anthracite); border: 2px solid var(--anthracite);" onclick="location.reload()">Neuer Versuch</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v1.0</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v3.0</p>
         </div>
     </div>
 </div>
@@ -906,6 +906,7 @@
     let deadlinePaused = false;
     let deadlineStartTime = 0;
     let deadlineRafId = null;
+    let deadlinePauseStart = 0;
     const DEADLINE_DURATION = 45000;
 
     // --- Web Audio API ---
@@ -1340,6 +1341,7 @@
         else if (currentPhase === 4) phase4Extensions++;
         else                          phase5Extensions++;
         deadlinePaused = true;
+        deadlinePauseStart = performance.now();
         deadlineOverlayEl.classList.add('active');
     }
 
@@ -1348,6 +1350,8 @@
         playSound('bell');
         deadlineOverlayEl.classList.remove('active');
         deadlineFillEl.classList.remove('urgent');
+        const pausedMs = performance.now() - deadlinePauseStart;
+        startTime += pausedMs;
         deadlinePaused = false;
         deadlineStartTime = performance.now();
         tickDeadline();
@@ -1516,7 +1520,7 @@
             timePhase2 = duration;
             setTransitionScreen(
                 'Phase 2 beendet',
-                'Sehr gut! Jetzt wenden wir Lean an.<br><br><strong>Runde 3: 5S am Arbeitsplatz – Ausmisten &amp; Anordnen</strong><br><br>Auf Ihrer Tastatur herrscht totales Chaos. Über die Hälfte der Tasten blockiert nur Ihre Sicht und Aufmerksamkeit. Wir wenden jetzt das Lean-Werkzeug <strong>5S</strong> an: Alles Unnötige fliegt vom Arbeitsplatz (<em>Seiri</em>), die verbleibenden Tasten werden sichtbar geordnet (<em>Seiton</em>). Suchen war gestern.',
+                'Sehr gut! Jetzt wenden wir Lean an.<br><br><strong>Runde 3: Ballast abwerfen (5S)</strong><br><br>Hand aufs Herz: Wie viel Zeit verbringen Sie im Alltag damit, nach Werkzeugen, Dokumenten oder den richtigen Tasten zu suchen? Ein überladener Arbeitsplatz ist der größte Produktivitätskiller. In dieser Runde wenden wir das fundamentale Lean-Werkzeug <strong>5S</strong> an. Wir bereinigen Ihre Arbeitsumgebung radikal von allem, was Sie ablenkt. Achten Sie mal darauf, wie schnell Ihre Augen das Ziel finden, wenn der Ballast plötzlich weg ist.',
                 'Phase 3 starten', 3
             );
             setTimeout(() => showScreen('transition-screen'), 500);
@@ -1525,7 +1529,7 @@
             timePhase3 = duration;
             setTransitionScreen(
                 'Phase 3 beendet',
-                'Stark! Jetzt eliminieren wir Wegezeiten.<br><br><strong>Runde 4: Ergonomie – Wegezeiten minimieren</strong><br><br>Die Tasten sind zwar sauber gefiltert, aber die Wege für Augen und Finger sind noch viel zu lang. In dieser Runde rücken wir die Tastatur optimal zusammen und sortieren die aktiven Tasten in <strong>logischer Reihenfolge</strong>. Minimale Bewegung bedeutet maximale Geschwindigkeit und weniger Ermüdung.',
+                'Stark! Jetzt optimieren wir das Layout.<br><br><strong>Runde 4: Wegezeiten minimieren (Ergonomie)</strong><br><br>Ihr Arbeitsplatz ist zwar sauber sortiert, aber bündeln Sie Ihre Kräfte schon optimal? Oft verschwenden wir unbemerkt Zeit durch zu lange Wege zwischen den einzelnen Arbeitsschritten. In dieser Runde optimieren wir das Layout. Achten Sie mal darauf, wie viel weniger Augen- und Fingerbewegung Sie gleich brauchen, um die Deadline locker einzuhalten.',
                 'Phase 4 starten', 4
             );
             setTimeout(() => showScreen('transition-screen'), 500);
@@ -1534,7 +1538,7 @@
             timePhase4 = duration;
             setTransitionScreen(
                 'Phase 4 beendet',
-                'Exzellent! Jetzt kommt die Königsdisziplin.<br><br><strong>Runde 5: Pick-by-Light – Die fehlerfreie Fabrik</strong><br><br>Wir digitalisieren Ihren Prozess. Das System denkt ab jetzt für Sie mit: Die Taste, die Sie als nächstes drücken müssen, <strong>leuchtet visuell auf</strong>. Suchzeiten sinken auf null, Denkfehler werden unmöglich. Das ist die perfekte Lean-Ausführung.',
+                'Exzellent! Jetzt kommt die Königsklasse.<br><br><strong>Runde 5: Die fehlerfreie Fabrik (Poka Yoke)</strong><br><br>Die Königsklasse der Evolution: Ein System, das Fehler im Keim erstickt. Ab jetzt übernimmt die Technik das Mitdenken für Sie, um Such- und Denkzeiten komplett zu eliminieren. Konzentrieren Sie sich in dieser letzten Runde rein auf den Takt – und erleben Sie, wie sich absolute Fehlerfreiheit anfühlt.',
                 'Phase 5 starten', 5
             );
             setTimeout(() => showScreen('transition-screen'), 500);
