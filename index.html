@@ -369,12 +369,20 @@
 
         #start-screen { text-align: left; }
 
-        #game-screen.active {
-            display: flex !important;
-            flex-grow: 1;
-            height: 0;
+        #game-screen {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: auto !important;
             padding: 20px;
             overflow: hidden;
+            background: var(--bg);
+        }
+
+        #game-screen.active {
+            display: flex !important;
+            flex-direction: column;
             justify-content: flex-start;
         }
 
@@ -871,7 +879,7 @@
             <div style="height: 40px; flex-shrink: 0;"></div>
             <div id="start-qr" style="display:flex;justify-content:center;"></div>
             <p class="hint" style="font-size:0.7rem;color:#bbb;margin-top:6px;">Zum Teilen scannen</p>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v4.17</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v4.18</p>
         </div>
 
         <div id="transition-screen" class="screen">
@@ -902,11 +910,11 @@
             <button id="bonus-phase6-btn" class="btn" style="display:none;background:var(--anthracite);color:#fff;margin-bottom:10px;" onclick="showPhase6Preview()">🔥 BONUS-LEVEL STARTEN: Das Experiment</button>
             <button class="btn" style="background-color: var(--bg); color: var(--anthracite); border: 2px solid var(--anthracite);" onclick="location.reload()">Neuer Versuch</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v4.17</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v4.18</p>
         </div>
     </div>
 
-    <div id="game-screen" class="screen" style="justify-content: flex-start;">
+    <div id="game-screen" class="screen">
         <canvas id="gridCanvas"></canvas>
         <div id="deadline-bar"><div id="deadline-fill"></div></div>
         <div id="keyboard"></div>
@@ -1136,6 +1144,10 @@
         if (contentArea) {
             contentArea.scrollTop = 0;
             contentArea.style.display = id === 'game-screen' ? 'none' : 'flex';
+        }
+        if (id === 'game-screen') {
+            document.getElementById('game-screen').style.top =
+                document.querySelector('header').offsetHeight + 'px';
         }
     }
 
@@ -1890,6 +1902,8 @@
 
     function handleViewportResize() {
         if(document.getElementById('game-screen').classList.contains('active')) {
+            document.getElementById('game-screen').style.top =
+                document.querySelector('header').offsetHeight + 'px';
             initCanvas();
             drawGrid();
         }
