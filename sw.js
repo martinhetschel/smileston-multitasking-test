@@ -1,4 +1,4 @@
-const CACHE = 'smilestone-v2';
+const CACHE = 'smilestone-v3';
 const ASSETS = [
     './',
     './index.html',
@@ -21,5 +21,11 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+    // HTML pages: network-first so deployments are picked up immediately
+    if (e.request.mode === 'navigate') {
+        e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+        return;
+    }
+    // Everything else: cache-first for fast offline use
     e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
