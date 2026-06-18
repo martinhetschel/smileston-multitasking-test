@@ -862,7 +862,7 @@
             <div style="height: 40px; flex-shrink: 0;"></div>
             <div id="start-qr" style="display:flex;justify-content:center;"></div>
             <p class="hint" style="font-size:0.7rem;color:#bbb;margin-top:6px;">Zum Teilen scannen</p>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v4.11</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v4.14</p>
         </div>
 
         <div id="transition-screen" class="screen">
@@ -899,7 +899,7 @@
             <button id="bonus-phase6-btn" class="btn" style="display:none;background:var(--anthracite);color:#fff;margin-bottom:10px;" onclick="showPhase6Preview()">🔥 BONUS-LEVEL STARTEN: Das Experiment</button>
             <button class="btn" style="background-color: var(--bg); color: var(--anthracite); border: 2px solid var(--anthracite);" onclick="location.reload()">Neuer Versuch</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v4.11</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v4.14</p>
         </div>
     </div>
 </div>
@@ -924,6 +924,10 @@
 </div>
 
 <script>
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+
     const ROWS = 15;
     const COLS = 3;
     const START_ROW = 5;
@@ -961,18 +965,18 @@
     let REQUIRED_LETTERS = [];
 
     const JOURNEY_DESC = {
-        multitasking: 'Messen Sie knallhart die versteckten Kosten ständiger Ablenkung. Dieser Test ermittelt Ihre persönliche Baseline und zeigt schwarz auf weiß, wie viel Kapazität und Zeit durch permanente Task-Wechsel unbemerkt verloren gehen.',
-        lean: 'Begleiten Sie uns auf einer 5-stufigen Optimierungsreise direkt aus der Praxis. Wir eliminieren systematisch Verschwendung – vom reinen Flow über die radikale 5S-Arbeitsplatzbereinigung bis hin zur fehlerfreien, autonomen Fabrik.'
+        multitasking: 'Erleben Sie ungeschminkt die unsichtbaren Zeitfresser Ihres Alltags. In diesem Modus ermitteln wir Ihre persönliche Baseline unter Dauerstress: Wie viel Zeit verschwenden Sie unbewusst, wenn Sie permanent zwischen verschiedenen Aufgaben hin- und hergerissen werden?',
+        lean: 'Starten Sie Ihre eigene Transformations-Reise Schritt für Schritt. Wir räumen Ihren digitalen Schreibtisch konsequent auf: Erleben Sie live, wie wir durch logische Fokussierung, radikales Ausmisten ungenutzter Tasten und smarte Assistenzsysteme die Hektik komplett aus dem Prozess nehmen.'
     };
     const MODE_DESC = {
-        standard: 'Der reguläre Prozessablauf. Optimal geeignet, um eine verlässliche und realistische Baseline für Ihre alltägliche Arbeitsgeschwindigkeit im Team zu ermitteln.',
-        hardcore: 'Maximale kognitive Belastung: Sie müssen die Zeichen in umgekehrter Reihenfolge eingeben. Hier erleben Sie gnadenlos, wie schnell ein instabiler Prozess unter erhöhtem Marktdruck komplett kollabiert.'
+        standard: 'Ihr ganz normaler Arbeitstag. Perfekt geeignet, um eine ehrliche und verlässliche Baseline für Ihre typische Arbeitsgeschwindigkeit im regulären Tagesgeschäft festzuhalten.',
+        hardcore: 'Der absolute Ausnahmezustand im Büro: Ein unvorhergesehener Marktdruck zwingt Sie dazu, Ihre gewohnten Abläufe komplett auf den Kopf zu stellen. Erleben Sie gnadenlos, wie schnell ein unstrukturierter Prozess kollabiert, wenn plötzlich Stress und Sonderwünsche aufeinanderprallen.'
     };
 
     function scrollToStartBtn() {
         setTimeout(() => {
             const btn = document.querySelector('#start-screen .btn');
-            if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }, 150);
     }
 
@@ -1119,6 +1123,8 @@
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
+        const contentArea = document.querySelector('.content-area');
+        if (contentArea) contentArea.scrollTop = 0;
     }
 
     function getExpectedValue(row, col) {
