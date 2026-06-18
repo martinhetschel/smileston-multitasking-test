@@ -45,6 +45,27 @@
             overflow: hidden;
         }
 
+        #orientation-guard {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: var(--anthracite);
+            color: #fff;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            text-align: center;
+            padding: 32px;
+        }
+        #orientation-guard span { font-size: 3rem; }
+        #orientation-guard p { font-size: 1rem; line-height: 1.5; margin: 0; }
+
+        @media (orientation: landscape) {
+            #orientation-guard { display: flex; }
+        }
+
         #app-container {
             width: 100%;
             max-width: 500px;
@@ -648,6 +669,11 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body>
+
+<div id="orientation-guard">
+    <span>📱</span>
+    <p>Bitte drehen Sie Ihr Gerät ins<br><strong>Hochformat</strong>, um das Spiel zu spielen.</p>
+</div>
 
 <div id="app-container">
     <div id="error-overlay">
