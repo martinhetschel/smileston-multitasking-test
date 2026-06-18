@@ -541,6 +541,7 @@
         }
 
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -660,10 +661,10 @@
 
             <button class="btn" onclick="startGame(1)">Phase 1 starten</button>
 
-            <a href="kommunizieren.html" style="display:block;width:100%;max-width:320px;margin-top:12px;padding:14px;border-radius:10px;border:2px solid var(--anthracite);background:transparent;color:var(--anthracite);font-size:0.95rem;font-weight:bold;text-align:center;text-decoration:none;">📡 Precision Gap spielen</a>
-
-            <div style="height: 60px; flex-shrink: 0;"></div>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v1.0</p>
+            <div style="height: 40px; flex-shrink: 0;"></div>
+            <div id="start-qr" style="display:flex;justify-content:center;"></div>
+            <p class="hint" style="font-size:0.7rem;color:#bbb;margin-top:6px;">Zum Teilen scannen</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v1.0</p>
         </div>
 
         <div id="transition-screen" class="screen">
@@ -1506,6 +1507,14 @@
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', handleViewportResize);
     }
+
+    // --- QR code for current page ---
+    window.addEventListener('load', () => {
+        const qrEl = document.getElementById('start-qr');
+        if (qrEl && typeof QRCode !== 'undefined') {
+            new QRCode(qrEl, { text: location.href.split('?')[0], width: 120, height: 120, colorDark: '#2D2D2D', colorLight: '#ffffff' });
+        }
+    });
 
     // --- PWA: Service Worker + Install Prompt ---
     if ('serviceWorker' in navigator) {
