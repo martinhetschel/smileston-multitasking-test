@@ -1817,7 +1817,9 @@
         if (gameMode === 'hardcore') {
             explain += ' Sie haben diese Runde unter erschwerten Bedingungen absolviert (umgekehrte Reihenfolge). In der Arbeitsrealität steht dies für fehlende Standards oder schlechte Ergonomie: Ungewöhnliche Abläufe verzögern den Prozess und zwingen das Gehirn zu unnötiger Zusatzarbeit.';
         }
-        document.getElementById('explainText').innerText = explain;
+        const explainEl2 = document.getElementById('explainText');
+        explainEl2.style.display = '';
+        explainEl2.innerText = explain;
 
         // --- Share-Text ---
         let share = `Ich habe den Smilestone Konzentrationstest gemacht:\n\nModus: ${modeLabel}\n`;
