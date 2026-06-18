@@ -490,36 +490,33 @@
             border-radius: 2px;
             transition: background-color 0.25s;
         }
-        @keyframes rowFlow {
-            0%, 8%   { background-color: white; }
-            16%, 30% { background-color: var(--yellow); }
-            38%, 100%{ background-color: white; }
-        }
-        @keyframes colFlow {
-            0%, 8%   { background-color: white; }
-            16%, 30% { background-color: var(--success-light); }
-            38%, 100%{ background-color: white; }
-        }
-        /* Zeilen-Sweep: Zeile 1 (1,2,3), Zeile 2 (4,5,6), Zeile 3 (7,8,9) */
-        .m-row .mini-cell:nth-child(1) { animation: rowFlow 2.7s infinite 0.0s; }
-        .m-row .mini-cell:nth-child(2) { animation: rowFlow 2.7s infinite 0.3s; }
-        .m-row .mini-cell:nth-child(3) { animation: rowFlow 2.7s infinite 0.6s; }
-        .m-row .mini-cell:nth-child(4) { animation: rowFlow 2.7s infinite 0.9s; }
-        .m-row .mini-cell:nth-child(5) { animation: rowFlow 2.7s infinite 1.2s; }
-        .m-row .mini-cell:nth-child(6) { animation: rowFlow 2.7s infinite 1.5s; }
-        .m-row .mini-cell:nth-child(7) { animation: rowFlow 2.7s infinite 1.8s; }
-        .m-row .mini-cell:nth-child(8) { animation: rowFlow 2.7s infinite 2.1s; }
-        .m-row .mini-cell:nth-child(9) { animation: rowFlow 2.7s infinite 2.4s; }
-        /* Spalten-Sweep: Spalte 1 (1,4,7), Spalte 2 (2,5,8), Spalte 3 (3,6,9) */
-        .m-col .mini-cell:nth-child(1) { animation: colFlow 2.7s infinite 0.0s; }
-        .m-col .mini-cell:nth-child(4) { animation: colFlow 2.7s infinite 0.3s; }
-        .m-col .mini-cell:nth-child(7) { animation: colFlow 2.7s infinite 0.6s; }
-        .m-col .mini-cell:nth-child(2) { animation: colFlow 2.7s infinite 0.9s; }
-        .m-col .mini-cell:nth-child(5) { animation: colFlow 2.7s infinite 1.2s; }
-        .m-col .mini-cell:nth-child(8) { animation: colFlow 2.7s infinite 1.5s; }
-        .m-col .mini-cell:nth-child(3) { animation: colFlow 2.7s infinite 1.8s; }
-        .m-col .mini-cell:nth-child(6) { animation: colFlow 2.7s infinite 2.1s; }
-        .m-col .mini-cell:nth-child(9) { animation: colFlow 2.7s infinite 2.4s; }
+        /* Per-Spalte-Keyframes damit Pastell-Basis nach der Animation erhalten bleibt */
+        @keyframes rowC1 { 0%,8%{background:#f4f7fa} 16%,30%{background:var(--yellow)} 38%,100%{background:#f4f7fa} }
+        @keyframes rowC2 { 0%,8%{background:#fdfaf4} 16%,30%{background:var(--yellow)} 38%,100%{background:#fdfaf4} }
+        @keyframes rowC3 { 0%,8%{background:#f4faf5} 16%,30%{background:var(--yellow)} 38%,100%{background:#f4faf5} }
+        @keyframes colC1 { 0%,8%{background:#f4f7fa} 16%,30%{background:var(--success-light)} 38%,100%{background:#f4f7fa} }
+        @keyframes colC2 { 0%,8%{background:#fdfaf4} 16%,30%{background:var(--success-light)} 38%,100%{background:#fdfaf4} }
+        @keyframes colC3 { 0%,8%{background:#f4faf5} 16%,30%{background:var(--success-light)} 38%,100%{background:#f4faf5} }
+        /* Zeilen-Sweep (Spalte des Cells bestimmt den Keyframe) */
+        .m-row .mini-cell:nth-child(1) { animation: rowC1 2.7s infinite 0.0s; }
+        .m-row .mini-cell:nth-child(2) { animation: rowC2 2.7s infinite 0.3s; }
+        .m-row .mini-cell:nth-child(3) { animation: rowC3 2.7s infinite 0.6s; }
+        .m-row .mini-cell:nth-child(4) { animation: rowC1 2.7s infinite 0.9s; }
+        .m-row .mini-cell:nth-child(5) { animation: rowC2 2.7s infinite 1.2s; }
+        .m-row .mini-cell:nth-child(6) { animation: rowC3 2.7s infinite 1.5s; }
+        .m-row .mini-cell:nth-child(7) { animation: rowC1 2.7s infinite 1.8s; }
+        .m-row .mini-cell:nth-child(8) { animation: rowC2 2.7s infinite 2.1s; }
+        .m-row .mini-cell:nth-child(9) { animation: rowC3 2.7s infinite 2.4s; }
+        /* Spalten-Sweep (Spalte 1→2→3 jeweils von oben nach unten) */
+        .m-col .mini-cell:nth-child(1) { animation: colC1 2.7s infinite 0.0s; }
+        .m-col .mini-cell:nth-child(4) { animation: colC1 2.7s infinite 0.3s; }
+        .m-col .mini-cell:nth-child(7) { animation: colC1 2.7s infinite 0.6s; }
+        .m-col .mini-cell:nth-child(2) { animation: colC2 2.7s infinite 0.9s; }
+        .m-col .mini-cell:nth-child(5) { animation: colC2 2.7s infinite 1.2s; }
+        .m-col .mini-cell:nth-child(8) { animation: colC2 2.7s infinite 1.5s; }
+        .m-col .mini-cell:nth-child(3) { animation: colC3 2.7s infinite 1.8s; }
+        .m-col .mini-cell:nth-child(6) { animation: colC3 2.7s infinite 2.1s; }
+        .m-col .mini-cell:nth-child(9) { animation: colC3 2.7s infinite 2.4s; }
 
         #countdown-overlay {
             position: absolute;
@@ -905,7 +902,13 @@
         gainNode.connect(audioCtx.destination);
         const now = audioCtx.currentTime;
 
-        if (type === 'error') {
+        if (type === 'success') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, now); // D5
+            gainNode.gain.setValueAtTime(0.1, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            osc.start(now); osc.stop(now + 0.15);
+        } else if (type === 'error') {
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(150, now);
             osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
@@ -1072,8 +1075,9 @@
 
         ctx.clearRect(0, 0, w, h);
 
-        ctx.fillStyle = '#f5f5f5';
-        ctx.fillRect(0, 0, w, cellH);
+        const COL_TINTS = ['#f4f7fa', '#fdfaf4', '#f4faf5'];
+        const HDR_TINTS = ['#e8f0f8', '#faf6e8', '#e8f8ea'];
+        HDR_TINTS.forEach((t, c) => { ctx.fillStyle = t; ctx.fillRect(c * cellW, 0, cellW, cellH); });
         ctx.fillStyle = '#2D2D2D';
         ctx.font = `bold ${cellH * 0.4}px 'Helvetica Neue', Arial, sans-serif`;
         ctx.textAlign = 'center';
@@ -1103,10 +1107,14 @@
             for (let c = 0; c < COLS; c++) {
                 const x = c * cellW;
 
+                // Pastel column tint
+                ctx.fillStyle = COL_TINTS[c];
+                ctx.fillRect(x, y, cellW, cellH);
+
                 ctx.beginPath();
                 ctx.moveTo(x, y + cellH);
                 ctx.lineTo(x + cellW, y + cellH);
-                ctx.strokeStyle = '#eee';
+                ctx.strokeStyle = '#e0e0e0';
                 ctx.lineWidth = 1;
                 ctx.stroke();
 
@@ -1368,6 +1376,7 @@
 
         if (val === expected) {
             gridData[activeRow][activeCol] = val;
+            playSound('success');
 
             btnElement.classList.remove('pick-by-light');
             btnElement.classList.remove('pop-pulse');
