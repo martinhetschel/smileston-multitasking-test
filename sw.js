@@ -21,9 +21,11 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-    // HTML pages: network-first so deployments are picked up immediately
+    // HTML pages: always validate with server, bypass HTTP cache
     if (e.request.mode === 'navigate') {
-        e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+        e.respondWith(
+            fetch(e.request, { cache: 'no-cache' }).catch(() => caches.match(e.request))
+        );
         return;
     }
     // Everything else: cache-first for fast offline use
