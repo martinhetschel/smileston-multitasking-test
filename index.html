@@ -494,6 +494,32 @@
 
         .deadline-card .btn-action:active { opacity: 0.9; }
 
+        /* Phase-6-Quiz */
+        .quiz-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 24px;
+            width: 100%;
+            max-width: 340px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            border-top: 6px solid var(--anthracite);
+        }
+        .quiz-card h2 { font-size: 1.1rem; font-weight: 900; color: var(--anthracite); margin: 0 0 12px; }
+        .quiz-card p  { font-size: 0.85rem; color: #555; line-height: 1.5; margin: 0 0 16px; }
+        .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+        .quiz-options button {
+            padding: 12px;
+            background: var(--panel);
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--anthracite);
+        }
+        .quiz-options button:active { background: var(--success-light); border-color: var(--success); }
+
         /* Cinema-Countdown-Overlay */
         /* ── Preview-Animation Startbildschirm ── */
         .preview-simulation {
@@ -857,9 +883,23 @@
                 </a>
             </div>
 
+            <button id="bonus-phase6-btn" class="btn" style="display:none;background:var(--anthracite);color:#fff;margin-bottom:10px;" onclick="showPhase6Preview()">🔥 BONUS-LEVEL STARTEN: Das Experiment</button>
             <button class="btn" style="background-color: var(--bg); color: var(--anthracite); border: 2px solid var(--anthracite);" onclick="location.reload()">Neuer Versuch</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
             <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v3.0</p>
+        </div>
+    </div>
+</div>
+
+<div id="phase6-quiz" style="display:none;position:fixed;inset:0;z-index:600;align-items:center;justify-content:center;padding:20px;background:rgba(45,45,45,0.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);">
+    <div class="quiz-card">
+        <h2>📋 Unangekündigter Qualitätscheck!</h2>
+        <p>Ihr Prozess lief rasant. Hand aufs Herz: Wissen Sie überhaupt, was Sie in <strong>Spalte C</strong> gerade eben produziert haben? Welches dieser Symbole war Teil des Prozesses?</p>
+        <div class="quiz-options">
+            <button onclick="submitQuiz(false)">▲ Dreieck – perfekt gleichseitig</button>
+            <button onclick="submitQuiz(false)">▼ Dreieck – umgedreht</button>
+            <button onclick="submitQuiz(true)">△ Dreieck – leicht verzerrt / schmal</button>
+            <button onclick="submitQuiz(false)">⬠ Fünfeck</button>
         </div>
     </div>
 </div>
@@ -886,6 +926,11 @@
     const REQUIRED_NUMBERS = ['6','7','8','9','10','11','12','13','14','15'];
     const REQUIRED_EMOJIS = ['🔲', '🔷', '🔴', '🔺'];
     const EMOJIS_PATTERN = ['🔲', '🔷', '🔴', '🔺'];
+
+    // Phase 6: Roman numerals I–XV, Katakana ア–ソ, confusingly similar shapes
+    const ROMAN_FULL    = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV'];
+    const KATAKANA_FULL = ['ア','イ','ウ','エ','オ','カ','キ','ク','ケ','コ','サ','シ','ス','セ','ソ'];
+    const SHAPES_P6     = ['▲','△','◆','◇'];
 
     // Standard: A-O aufsteigend. Hardcore: Z absteigend (Z,Y,X,...,L).
     function buildLettersFull(mode) {
@@ -926,6 +971,7 @@
     let timePhase3 = 0;
     let timePhase4 = 0;
     let timePhase5 = 0;
+    let timePhase6 = 0;
     let inputLocked = false;
     let windowStart = 0;
     let scrollAnimFrame = null;
@@ -935,7 +981,8 @@
     let phase3Extensions = 0;
     let phase4Extensions = 0;
     let phase5Extensions = 0;
-    let phase1Errors = 0, phase2Errors = 0, phase3Errors = 0, phase4Errors = 0, phase5Errors = 0;
+    let phase6Extensions = 0;
+    let phase1Errors = 0, phase2Errors = 0, phase3Errors = 0, phase4Errors = 0, phase5Errors = 0, phase6Errors = 0;
     let deadlinePaused = false;
     let deadlineStartTime = 0;
     let deadlineRafId = null;
@@ -1046,6 +1093,11 @@
     }
 
     function getExpectedValue(row, col) {
+        if (currentPhase === 6) {
+            if (col === 0) return ROMAN_FULL[row];
+            if (col === 1) return KATAKANA_FULL[row];
+            if (col === 2) return SHAPES_P6[row % SHAPES_P6.length];
+        }
         if (col === 0) return (row + 1).toString();
         if (col === 1) return LETTERS_FULL[row];
         if (col === 2) return EMOJIS_PATTERN[row % 4];
@@ -1062,9 +1114,11 @@
             phase3Extensions = 0;
             phase4Extensions = 0;
             phase5Extensions = 0;
+            phase6Extensions = 0;
             timePhase5 = 0;
+            timePhase6 = 0;
             phase1Errors = 0; phase2Errors = 0; phase3Errors = 0;
-            phase4Errors = 0; phase5Errors = 0;
+            phase4Errors = 0; phase5Errors = 0; phase6Errors = 0;
         } else if (phase === 2) {
             phase2Extensions = 0;
             phase2Errors = 0;
@@ -1077,6 +1131,9 @@
         } else if (phase === 5) {
             phase5Extensions = 0;
             phase5Errors = 0;
+        } else if (phase === 6) {
+            phase6Extensions = 0;
+            phase6Errors = 0;
         }
 
         gridData = Array(ROWS).fill().map(() => Array(COLS).fill(''));
@@ -1105,6 +1162,8 @@
         } else if (phase === 3) {
             buildStaticKeyboard();
             updateKeyboardFor5S();
+        } else if (phase === 6) {
+            buildPhase6Keyboard();
         } else {
             buildSortedKeyboard();
         }
@@ -1115,6 +1174,7 @@
             startTime = performance.now();
             startDeadlineTimer();
             if (phase === 5) highlightNextKey();
+            if (phase === 6) highlightNextKey();
         });
     }
 
@@ -1317,6 +1377,61 @@
         });
     }
 
+    function buildPhase6Keyboard() {
+        keyboardEl.innerHTML = '';
+        let keys;
+        if      (activeCol === 0) keys = ROMAN_FULL.slice(START_ROW);
+        else if (activeCol === 1) keys = KATAKANA_FULL.slice(START_ROW);
+        else                      keys = [...SHAPES_P6];
+        keys.forEach(keyVal => {
+            const btn = document.createElement('div');
+            btn.className = 'key';
+            btn.textContent = keyVal;
+            if (activeCol === 2) btn.style.color = 'var(--anthracite)';
+            btn.addEventListener('pointerdown', e => { e.preventDefault(); handleKeyPress(keyVal, btn); });
+            keyboardEl.appendChild(btn);
+        });
+    }
+
+    function showPhase6Preview() {
+        setTransitionScreen(
+            'BONUS-LEVEL: Das Experiment',
+            '<strong>Runde 6: Die ungelernte Fachkraft (Process beats Skill)</strong>' +
+            '<br><br>Willkommen im harten Realitätscheck. Der Fachkräftemangel hat zugeschlagen und Ihr Unternehmen muss sofort expandieren. Ein neuer internationaler Kunde verlangt ab sofort ein hochkomplexes Produkt.' +
+            '<br><br>Auf Ihrem Schreibtisch landen extrem kryptische Datenpakete:' +
+            '<ul style="text-align:left;margin:10px 0 0 16px;line-height:1.8">' +
+            '<li><strong>Spalte A:</strong> Römische Zahlen</li>' +
+            '<li><strong>Spalte B:</strong> Japanische Schriftzeichen</li>' +
+            '<li><strong>Spalte C:</strong> <em>[Vom System verschlüsselt – Inhalt unbekannt]</em></li>' +
+            '</ul>' +
+            '<br>Sie haben keinerlei Ausbildung, keine Vorkenntnisse und keine Zeit für eine Einarbeitung. Die Deadline läuft unerbittlich. Starten Sie das Experiment.',
+            '🔬 Experiment starten',
+            6
+        );
+        showScreen('transition-screen');
+    }
+
+    function submitQuiz(wasCorrect) {
+        document.getElementById('phase6-quiz').style.display = 'none';
+        buildPhase6EndScreen(wasCorrect);
+        showScreen('end-screen');
+    }
+
+    function buildPhase6EndScreen(wasCorrect) {
+        document.getElementById('bonus-phase6-btn').style.display = 'none';
+        const errColor = phase6Errors === 0 ? 'var(--success)' : 'var(--error)';
+        document.getElementById('stats').innerHTML = `
+            <div class="stat-row"><span>Runde 6 Zeit:</span> <strong>${timePhase6.toFixed(1)} s</strong></div>
+            <div class="stat-row"><span>Fehlgriffe:</span> <strong style="color:${errColor}">${phase6Errors}</strong></div>
+            <div class="stat-row"><span>Quiz-Antwort:</span> <strong>${wasCorrect ? '✓ Richtig!' : '✗ Falsch – egal!'}</strong></div>
+            <div style="margin:20px 0;padding:20px;background:var(--anthracite);border-radius:12px;color:#fff;text-align:center;">
+                <div style="font-size:1.8rem;margin-bottom:8px;">🤖</div>
+                <div style="font-weight:900;font-size:1.1rem;margin-bottom:10px;">Die autonome Fabrik</div>
+                <div style="font-size:0.82rem;line-height:1.6;color:#ccc;">Das System schlägt das Talent. Spalte C – konnten Sie die Symbole im Quiz sicher identifizieren? Völlig egal! Dank lückenlosem Pick-by-Light haben Sie fehlerfreie Experten-Qualität geliefert, ohne eingelernt zu sein. Ein perfekter Prozess entkoppelt die Ausführungsqualität vom Skill des Mitarbeiters.</div>
+            </div>`;
+        document.getElementById('explainText').textContent = '';
+    }
+
     function startDeadlineTimer() {
         deadlineFillEl.classList.remove('urgent');
         deadlineFillEl.style.width = '100%';
@@ -1372,7 +1487,8 @@
         else if (currentPhase === 2) phase2Extensions++;
         else if (currentPhase === 3) phase3Extensions++;
         else if (currentPhase === 4) phase4Extensions++;
-        else                          phase5Extensions++;
+        else if (currentPhase === 5)  phase5Extensions++;
+        else                          phase6Extensions++;
         deadlinePaused = true;
         deadlinePauseStart = performance.now();
         deadlineOverlayEl.classList.add('active');
@@ -1448,7 +1564,8 @@
             else if (currentPhase === 2) phase2Errors++;
             else if (currentPhase === 3) phase3Errors++;
             else if (currentPhase === 4) phase4Errors++;
-            else                          phase5Errors++;
+            else if (currentPhase === 5)  phase5Errors++;
+            else                          phase6Errors++;
             errorOverlay.classList.add('flash');
 
             setTimeout(() => {
@@ -1507,9 +1624,11 @@
                 } else if (currentPhase === 5) {
                     buildSortedKeyboard();
                     highlightNextKey();
+                } else if (currentPhase === 6) {
+                    buildPhase6Keyboard();
                 }
                 triggerSuccessOverlay(activeCol);
-            } else if (currentPhase === 5) {
+            } else if (currentPhase === 5 || currentPhase === 6) {
                 highlightNextKey();
             }
         }
@@ -1575,6 +1694,12 @@
                 'Phase 5 starten', 5
             );
             setTimeout(() => showScreen('transition-screen'), 500);
+
+        } else if (currentPhase === 6) {
+            timePhase6 = duration;
+            setTimeout(() => {
+                document.getElementById('phase6-quiz').style.display = 'flex';
+            }, 400);
 
         } else {
             if (currentPhase === 2) timePhase2 = duration;
@@ -1669,6 +1794,13 @@
                      </div>`;
         }
         document.getElementById('stats').innerHTML = html;
+
+        const bonusBtn = document.getElementById('bonus-phase6-btn');
+        if (currentPhase === 5 && gameJourney === 'lean') {
+            bonusBtn.style.display = 'block';
+        } else {
+            bonusBtn.style.display = 'none';
+        }
 
         // --- Erklärungstext ---
         let explain = 'Warum waren Sie im Vergleich zu Runde 1 so viel schneller? Multitasking kostet enorme Energie, da das Gehirn ständig "umrüsten" muss.';
