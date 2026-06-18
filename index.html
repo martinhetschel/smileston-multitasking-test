@@ -508,19 +508,19 @@
             transform: translateX(-50%);
             width: calc(100% - 40px);
             max-width: 340px;
-            background: var(--anthracite);
+            background: #111;
             color: #fff;
             border-radius: 12px;
             padding: 14px 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.5);
             z-index: 9999;
             font-size: 0.9rem;
-            display: none;
+            font-weight: 600;
             align-items: center;
             gap: 12px;
         }
         #pwa-toast.visible { display: flex; }
-        #pwa-toast p { margin: 0; flex: 1; line-height: 1.4; }
+        #pwa-toast p { margin: 0; flex: 1; line-height: 1.4; color: #fff; }
         #pwa-toast button {
             background: var(--yellow);
             color: var(--anthracite);
@@ -534,10 +534,11 @@
         }
         #pwa-dismiss {
             background: transparent !important;
-            color: #aaa !important;
+            color: #fff !important;
             font-weight: normal !important;
             padding: 8px 6px !important;
             font-size: 1.2rem !important;
+            opacity: 0.7;
         }
 
     </style>
