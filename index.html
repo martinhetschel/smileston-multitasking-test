@@ -369,6 +369,15 @@
 
         #start-screen { text-align: left; }
 
+        #game-screen.active {
+            display: flex !important;
+            flex-grow: 1;
+            height: 0;
+            padding: 20px;
+            overflow: hidden;
+            justify-content: flex-start;
+        }
+
         .share-buttons {
             display: flex;
             gap: 10px;
@@ -862,19 +871,13 @@
             <div style="height: 40px; flex-shrink: 0;"></div>
             <div id="start-qr" style="display:flex;justify-content:center;"></div>
             <p class="hint" style="font-size:0.7rem;color:#bbb;margin-top:6px;">Zum Teilen scannen</p>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v4.16</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v4.17</p>
         </div>
 
         <div id="transition-screen" class="screen">
             <h1 id="transTitle">Phase 1 beendet</h1>
             <p id="transDesc"></p>
             <button class="btn" id="transBtn">Phase 2 starten</button>
-        </div>
-
-        <div id="game-screen" class="screen" style="justify-content: flex-start;">
-            <canvas id="gridCanvas"></canvas>
-            <div id="deadline-bar"><div id="deadline-fill"></div></div>
-            <div id="keyboard"></div>
         </div>
 
         <div id="end-screen" class="screen" style="height: auto; min-height: 100%; justify-content: flex-start; padding-top: 20px; padding-bottom: 60px;">
@@ -899,8 +902,14 @@
             <button id="bonus-phase6-btn" class="btn" style="display:none;background:var(--anthracite);color:#fff;margin-bottom:10px;" onclick="showPhase6Preview()">🔥 BONUS-LEVEL STARTEN: Das Experiment</button>
             <button class="btn" style="background-color: var(--bg); color: var(--anthracite); border: 2px solid var(--anthracite);" onclick="location.reload()">Neuer Versuch</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v4.16</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v4.17</p>
         </div>
+    </div>
+
+    <div id="game-screen" class="screen" style="justify-content: flex-start;">
+        <canvas id="gridCanvas"></canvas>
+        <div id="deadline-bar"><div id="deadline-fill"></div></div>
+        <div id="keyboard"></div>
     </div>
 </div>
 
@@ -1126,7 +1135,7 @@
         const contentArea = document.querySelector('.content-area');
         if (contentArea) {
             contentArea.scrollTop = 0;
-            contentArea.style.overflowY = id === 'game-screen' ? 'hidden' : 'auto';
+            contentArea.style.display = id === 'game-screen' ? 'none' : 'flex';
         }
     }
 
