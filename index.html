@@ -183,13 +183,10 @@
             font-size: 0.88rem;
             color: #555;
             line-height: 1.5;
-            text-align: center;
+            text-align: left;
             margin: 8px 0 16px;
-            padding: 0 10px;
-            font-style: italic;
-        }
-            margin-bottom: 16px;
-            text-align: center;
+            width: 100%;
+            max-width: 320px;
         }
 
         #game-area {
@@ -361,15 +358,16 @@
         .highlight-red { color: var(--error); font-weight: bold; }
 
         .hint {
-            font-size: 0.95rem;
-            color: #777;
-            font-style: italic;
+            font-size: 0.88rem;
+            color: #555;
             background: #f9f9f9;
             padding: 10px;
             border-left: 4px solid var(--yellow);
             width: 100%;
             max-width: 320px;
         }
+
+        #start-screen { text-align: left; }
 
         .share-buttons {
             display: flex;
@@ -809,7 +807,7 @@
         <div id="start-screen" class="screen active" style="height: auto; min-height: 100%; justify-content: flex-start; padding-top: 20px;">
             <h1>Auf die Plätze, fertig, los!</h1>
 
-            <p style="text-align:left;font-size:0.92rem;line-height:1.6;margin-bottom:12px;">
+            <p style="font-size:0.88rem;line-height:1.6;margin-bottom:12px;width:100%;max-width:320px;">
                 <strong>Der ganz normale Büro-Wahnsinn: Beherrschen Sie das Chaos?</strong><br><br>
                 Stellen Sie sich vor, auf Ihrem Schreibtisch landen gleichzeitig drei verschiedene Projektaufgaben:
                 <strong>Aufgabe A (Zahlen)</strong>, <strong>Aufgabe B (Buchstaben)</strong> und <strong>Aufgabe C (Symbole)</strong>.<br><br>
@@ -857,7 +855,7 @@
                 <strong>⏱ Achtung:</strong> Sie haben pro Runde exakt 30 Sekunden Zeit. Läuft die Deadline ab, ist der Kundenauftrag gefährdet – und Sie müssen eine ungeplante Extraschicht einlegen, um den Prozess abzuschließen.
             </div>
 
-            <p style="font-size: 0.78rem; color: #888; margin: 0 0 16px 0;">🔔 Tipp: Bitte Ton einschalten für Prozess-Feedback.</p>
+            <p style="font-size: 0.88rem; color: #555; margin: 0 0 16px 0; width: 100%; max-width: 320px;">🔔 Tipp: Bitte Ton einschalten für Prozess-Feedback.</p>
 
             <button class="btn" onclick="startGame(1)">Phase 1 starten</button>
 
