@@ -507,6 +507,13 @@
             aspect-ratio: 1;
             border-radius: 2px;
             transition: background-color 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #cbd5e1;
+            user-select: none;
         }
         /* Per-Spalte-Keyframes damit Pastell-Basis nach der Animation erhalten bleibt */
         @keyframes rowC1 { 0%,8%{background:#f4f7fa} 16%,30%{background:var(--yellow)} 38%,100%{background:#f4f7fa} }
@@ -748,18 +755,18 @@
                 <div class="preview-box m-row">
                     <span>Runde 1: Multitasking</span>
                     <div class="mini-grid">
-                        <div class="mini-cell"></div><div class="mini-cell"></div><div class="mini-cell"></div>
-                        <div class="mini-cell"></div><div class="mini-cell"></div><div class="mini-cell"></div>
-                        <div class="mini-cell"></div><div class="mini-cell"></div><div class="mini-cell"></div>
+                        <div class="mini-cell">A</div><div class="mini-cell">B</div><div class="mini-cell">C</div>
+                        <div class="mini-cell">A</div><div class="mini-cell">B</div><div class="mini-cell">C</div>
+                        <div class="mini-cell">A</div><div class="mini-cell">B</div><div class="mini-cell">C</div>
                     </div>
                     <span style="font-size:0.65rem;color:#777;display:block;margin-top:5px;">⇄ zeilenweise – ständig umrüsten</span>
                 </div>
                 <div class="preview-box m-col">
                     <span>Ab Runde 2: Flow</span>
                     <div class="mini-grid">
-                        <div class="mini-cell"></div><div class="mini-cell"></div><div class="mini-cell"></div>
-                        <div class="mini-cell"></div><div class="mini-cell"></div><div class="mini-cell"></div>
-                        <div class="mini-cell"></div><div class="mini-cell"></div><div class="mini-cell"></div>
+                        <div class="mini-cell">A</div><div class="mini-cell">B</div><div class="mini-cell">C</div>
+                        <div class="mini-cell">A</div><div class="mini-cell">B</div><div class="mini-cell">C</div>
+                        <div class="mini-cell">A</div><div class="mini-cell">B</div><div class="mini-cell">C</div>
                     </div>
                     <span style="font-size:0.65rem;color:#777;display:block;margin-top:5px;">↓ spaltenweise – fokussiert im Flow</span>
                 </div>
