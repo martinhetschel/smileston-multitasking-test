@@ -972,6 +972,7 @@
     let timePhase4 = 0;
     let timePhase5 = 0;
     let timePhase6 = 0;
+    let phase6GridSnapshot = '';
     let inputLocked = false;
     let windowStart = 0;
     let scrollAnimFrame = null;
@@ -1398,13 +1399,7 @@
             'BONUS-LEVEL: Das Experiment',
             '<strong>Runde 6: Die ungelernte Fachkraft (Process beats Skill)</strong>' +
             '<br><br>Willkommen im harten Realitätscheck. Der Fachkräftemangel hat zugeschlagen und Ihr Unternehmen muss sofort expandieren. Ein neuer internationaler Kunde verlangt ab sofort ein hochkomplexes Produkt.' +
-            '<br><br>Auf Ihrem Schreibtisch landen extrem kryptische Datenpakete:' +
-            '<ul style="text-align:left;margin:10px 0 0 16px;line-height:1.8">' +
-            '<li><strong>Spalte A:</strong> Römische Zahlen</li>' +
-            '<li><strong>Spalte B:</strong> Japanische Schriftzeichen</li>' +
-            '<li><strong>Spalte C:</strong> <em>[Vom System verschlüsselt – Inhalt unbekannt]</em></li>' +
-            '</ul>' +
-            '<br>Sie haben keinerlei Ausbildung, keine Vorkenntnisse und keine Zeit für eine Einarbeitung. Die Deadline läuft unerbittlich. Starten Sie das Experiment.',
+            '<br><br>Sie haben keinerlei Ausbildung, keine Vorkenntnisse und keine Zeit für eine Einarbeitung. Die Deadline läuft unerbittlich. Starten Sie das Experiment.',
             '🔬 Experiment starten',
             6
         );
@@ -1419,17 +1414,21 @@
 
     function buildPhase6EndScreen(wasCorrect) {
         document.getElementById('bonus-phase6-btn').style.display = 'none';
+        const explainEl = document.getElementById('explainText');
+        explainEl.textContent = '';
+        explainEl.style.display = 'none';
         const errColor = phase6Errors === 0 ? 'var(--success)' : 'var(--error)';
         document.getElementById('stats').innerHTML = `
             <div class="stat-row"><span>Runde 6 Zeit:</span> <strong>${timePhase6.toFixed(1)} s</strong></div>
             <div class="stat-row"><span>Fehlgriffe:</span> <strong style="color:${errColor}">${phase6Errors}</strong></div>
             <div class="stat-row"><span>Quiz-Antwort:</span> <strong>${wasCorrect ? '✓ Richtig!' : '✗ Falsch – egal!'}</strong></div>
-            <div style="margin:20px 0;padding:20px;background:var(--anthracite);border-radius:12px;color:#fff;text-align:center;">
+            <div style="margin:16px 0 4px;font-size:0.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Das vollständige Ergebnis:</div>
+            <img src="${phase6GridSnapshot}" style="width:100%;border-radius:8px;border:1px solid #e0e0e0;display:block;margin-bottom:16px;" />
+            <div style="padding:20px;background:var(--anthracite);border-radius:12px;color:#fff;text-align:center;">
                 <div style="font-size:1.8rem;margin-bottom:8px;">🤖</div>
                 <div style="font-weight:900;font-size:1.1rem;margin-bottom:10px;">Die autonome Fabrik</div>
                 <div style="font-size:0.82rem;line-height:1.6;color:#ccc;">Das System schlägt das Talent. Spalte C – konnten Sie die Symbole im Quiz sicher identifizieren? Völlig egal! Dank lückenlosem Pick-by-Light haben Sie fehlerfreie Experten-Qualität geliefert, ohne eingelernt zu sein. Ein perfekter Prozess entkoppelt die Ausführungsqualität vom Skill des Mitarbeiters.</div>
             </div>`;
-        document.getElementById('explainText').textContent = '';
     }
 
     function startDeadlineTimer() {
@@ -1626,6 +1625,7 @@
                     highlightNextKey();
                 } else if (currentPhase === 6) {
                     buildPhase6Keyboard();
+                    highlightNextKey();
                 }
                 triggerSuccessOverlay(activeCol);
             } else if (currentPhase === 5 || currentPhase === 6) {
@@ -1697,6 +1697,7 @@
 
         } else if (currentPhase === 6) {
             timePhase6 = duration;
+            phase6GridSnapshot = canvas.toDataURL();
             setTimeout(() => {
                 document.getElementById('phase6-quiz').style.display = 'flex';
             }, 400);
