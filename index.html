@@ -21,6 +21,7 @@
             --text: #444444;
             --border: #cccccc;
             --success: #2e7d32;
+            --success-light: #c8e6c9;
             --success-light: #d4edda;
             --error: #c62828;
             --wa-color: #25D366;
@@ -445,6 +446,71 @@
         }
 
         /* Cinema-Countdown-Overlay */
+        /* ── Preview-Animation Startbildschirm ── */
+        .preview-simulation {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 16px 0;
+            width: 100%;
+            max-width: 320px;
+        }
+        .preview-box {
+            flex: 1;
+            background: var(--panel);
+            border: 2px solid var(--anthracite);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.72rem;
+            font-weight: bold;
+            color: var(--anthracite);
+        }
+        .mini-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+            margin-top: 8px;
+            background: var(--anthracite);
+            padding: 3px;
+            border-radius: 4px;
+        }
+        .mini-cell {
+            background: white;
+            aspect-ratio: 1;
+            border-radius: 2px;
+            transition: background-color 0.25s;
+        }
+        @keyframes rowFlow {
+            0%, 8%   { background-color: white; }
+            16%, 30% { background-color: var(--yellow); }
+            38%, 100%{ background-color: white; }
+        }
+        @keyframes colFlow {
+            0%, 8%   { background-color: white; }
+            16%, 30% { background-color: var(--success-light); }
+            38%, 100%{ background-color: white; }
+        }
+        /* Zeilen-Sweep: Zeile 1 (1,2,3), Zeile 2 (4,5,6), Zeile 3 (7,8,9) */
+        .m-row .mini-cell:nth-child(1) { animation: rowFlow 2.7s infinite 0.0s; }
+        .m-row .mini-cell:nth-child(2) { animation: rowFlow 2.7s infinite 0.3s; }
+        .m-row .mini-cell:nth-child(3) { animation: rowFlow 2.7s infinite 0.6s; }
+        .m-row .mini-cell:nth-child(4) { animation: rowFlow 2.7s infinite 0.9s; }
+        .m-row .mini-cell:nth-child(5) { animation: rowFlow 2.7s infinite 1.2s; }
+        .m-row .mini-cell:nth-child(6) { animation: rowFlow 2.7s infinite 1.5s; }
+        .m-row .mini-cell:nth-child(7) { animation: rowFlow 2.7s infinite 1.8s; }
+        .m-row .mini-cell:nth-child(8) { animation: rowFlow 2.7s infinite 2.1s; }
+        .m-row .mini-cell:nth-child(9) { animation: rowFlow 2.7s infinite 2.4s; }
+        /* Spalten-Sweep: Spalte 1 (1,4,7), Spalte 2 (2,5,8), Spalte 3 (3,6,9) */
+        .m-col .mini-cell:nth-child(1) { animation: colFlow 2.7s infinite 0.0s; }
+        .m-col .mini-cell:nth-child(4) { animation: colFlow 2.7s infinite 0.3s; }
+        .m-col .mini-cell:nth-child(7) { animation: colFlow 2.7s infinite 0.6s; }
+        .m-col .mini-cell:nth-child(2) { animation: colFlow 2.7s infinite 0.9s; }
+        .m-col .mini-cell:nth-child(5) { animation: colFlow 2.7s infinite 1.2s; }
+        .m-col .mini-cell:nth-child(8) { animation: colFlow 2.7s infinite 1.5s; }
+        .m-col .mini-cell:nth-child(3) { animation: colFlow 2.7s infinite 1.8s; }
+        .m-col .mini-cell:nth-child(6) { animation: colFlow 2.7s infinite 2.1s; }
+        .m-col .mini-cell:nth-child(9) { animation: colFlow 2.7s infinite 2.4s; }
+
         #countdown-overlay {
             position: absolute;
             top: 0;
@@ -455,7 +521,9 @@
             display: none;
             align-items: center;
             justify-content: center;
-            background-color: rgba(45, 45, 45, 0.85);
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             pointer-events: auto;
         }
 
@@ -464,10 +532,11 @@
         #countdown-number {
             font-size: 15vh;
             font-weight: 900;
-            color: var(--yellow);
+            color: var(--anthracite);
             line-height: 1;
             text-align: center;
             user-select: none;
+            text-shadow: 0 0 20px rgba(255,255,255,0.9);
         }
 
         @keyframes countdownPop {
@@ -640,7 +709,36 @@
     <div class="content-area">
         <div id="start-screen" class="screen active" style="height: auto; min-height: 100%; justify-content: flex-start; padding-top: 20px;">
             <h1>Auf die Plätze, fertig, los!</h1>
-            <p><strong>Wähle deine Trainings-Reise</strong></p>
+
+            <p style="text-align:left;font-size:0.92rem;line-height:1.6;margin-bottom:12px;">
+                <strong>Der ganz normale Büro-Wahnsinn: Beherrschen Sie das Chaos?</strong><br><br>
+                Stellen Sie sich vor, auf Ihrem Schreibtisch landen gleichzeitig drei verschiedene Projektaufgaben:
+                <strong>Aufgabe A (Zahlen)</strong>, <strong>Aufgabe B (Buchstaben)</strong> und <strong>Aufgabe C (Symbole)</strong>.<br><br>
+                In <strong>Runde 1</strong> simuliert das Spiel den klassischen Multitasking-Fehler: Sie müssen das Raster
+                <strong>Zeile für Zeile</strong> ausfüllen. Kaum haben Sie eine Zahl eingetippt, zwingt Sie der Prozess zum
+                Umschalten auf einen Buchstaben – und danach sofort auf ein Symbol. Ihr Gehirn muss permanent "umrüsten".
+            </p>
+
+            <div class="preview-simulation">
+                <div class="preview-box m-row">
+                    <span>Runde 1: Multitasking</span>
+                    <div class="mini-grid">
+                        <div class="mini-cell"></div><div class="mini-cell"></div><div class="mini-cell"></div>
+                        <div class="mini-cell"></div><div class="mini-cell"></div><div class="mini-cell"></div>
+                        <div class="mini-cell"></div><div class="mini-cell"></div><div class="mini-cell"></div>
+                    </div>
+                    <span style="font-size:0.65rem;color:#777;display:block;margin-top:5px;">⇄ zeilenweise – ständig umrüsten</span>
+                </div>
+                <div class="preview-box m-col">
+                    <span>Ab Runde 2: Flow</span>
+                    <div class="mini-grid">
+                        <div class="mini-cell"></div><div class="mini-cell"></div><div class="mini-cell"></div>
+                        <div class="mini-cell"></div><div class="mini-cell"></div><div class="mini-cell"></div>
+                        <div class="mini-cell"></div><div class="mini-cell"></div><div class="mini-cell"></div>
+                    </div>
+                    <span style="font-size:0.65rem;color:#777;display:block;margin-top:5px;">↓ spaltenweise – fokussiert im Flow</span>
+                </div>
+            </div>
 
             <div class="mode-selector">
                 <button type="button" class="mode-btn active" data-journey="multitasking" onclick="selectJourney('multitasking')">Multitasking-Test</button>
@@ -654,7 +752,7 @@
             </div>
             <p class="toggle-hint">Hardcore: Eingabe der Zeichen in umgekehrter Reihenfolge.</p>
 
-            <p class="hint">Die ersten 5 Zeilen sind bereits als Orientierungshilfe vorausgefüllt. Sie starten in Zeile 6.</p>
+            <p class="hint">Die ersten 5 Zeilen im Hauptspiel sind als Orientierungshilfe bereits vorausgefüllt. Sie starten direkt in Zeile 6.</p>
 
             <div class="deadline-info">
                 <strong>⏱ Achtung:</strong> Sie haben pro Level exakt 45 Sekunden Zeit. Läuft die Zeit ab, wird der Prozess blockiert und Sie müssen zwingend eine Extraschicht / Überstunden kaufen, um weiterspielen zu können!
@@ -1363,13 +1461,13 @@
             if (gameJourney === 'lean') {
                 setTransitionScreen(
                     'Phase 1 beendet',
-                    'Ihre Zeit wurde erfasst.<br><br><strong>Runde 2: Der reine Flow</strong><br><br>Füllen Sie das Raster nun <strong>Spalte für Spalte</strong> aus – mit der vollen Tastatur. Kein 5S, kein Pick-by-Light. Pure Geschwindigkeit.',
+                    'Ihre Zeit wurde erfasst.<br><br><strong>Runde 2: Der Flow-Effekt – Fokus statt Chaos</strong><br><br>Schluss mit dem permanenten Hin und Her! In dieser Runde organisieren wir Ihren Prozess neu. Sie arbeiten nicht mehr zeilenweise, sondern <strong>spaltenweise</strong>. Erst alle Zahlen, dann alle Buchstaben, dann alle Symbole. Ihr Gehirn muss nicht mehr ständig umrüsten – erleben Sie den Unterschied!',
                     'Phase 2 starten', 2
                 );
             } else {
                 setTransitionScreen(
                     'Phase 1 beendet',
-                    'Ihre Zeit wurde erfasst.<br><br><strong>Runde 2: Spaltenweise (Flow)</strong><br><br>Füllen Sie das Raster nun <strong>Spalte für Spalte</strong> aus – mit der vollen Tastatur. Kein Multitasking mehr!',
+                    'Ihre Zeit wurde erfasst.<br><br><strong>Runde 2: Der Flow-Effekt – Fokus statt Chaos</strong><br><br>Schluss mit dem permanenten Hin und Her! In dieser Runde organisieren wir Ihren Prozess neu. Sie arbeiten nicht mehr zeilenweise, sondern <strong>spaltenweise</strong>. Erst alle Zahlen, dann alle Buchstaben, dann alle Symbole. Ihr Gehirn muss nicht mehr ständig umrüsten – erleben Sie den Unterschied!',
                     'Phase 2 starten', 2
                 );
             }
@@ -1379,7 +1477,7 @@
             timePhase2 = duration;
             setTransitionScreen(
                 'Phase 2 beendet',
-                'Gut! Jetzt kommt 5S ins Spiel.<br><br><strong>Runde 3: 5S-Modus</strong><br><br>Füllen Sie das Raster weiter <strong>Spalte für Spalte</strong> aus. Nicht benötigte Tasten werden nun <strong>ausgeblendet</strong> – kein Suchen mehr nötig.',
+                'Sehr gut! Jetzt wenden wir Lean an.<br><br><strong>Runde 3: 5S am Arbeitsplatz – Ausmisten &amp; Anordnen</strong><br><br>Auf Ihrer Tastatur herrscht totales Chaos. Über die Hälfte der Tasten blockiert nur Ihre Sicht und Aufmerksamkeit. Wir wenden jetzt das Lean-Werkzeug <strong>5S</strong> an: Alles Unnötige fliegt vom Arbeitsplatz (<em>Seiri</em>), die verbleibenden Tasten werden sichtbar geordnet (<em>Seiton</em>). Suchen war gestern.',
                 'Phase 3 starten', 3
             );
             setTimeout(() => showScreen('transition-screen'), 500);
@@ -1388,7 +1486,7 @@
             timePhase3 = duration;
             setTransitionScreen(
                 'Phase 3 beendet',
-                'Stark! Jetzt kommt die Ergonomie-Stufe.<br><br><strong>Runde 4: Ergonomie</strong><br><br>Die 5S-Filterung bleibt aktiv. Die aktiven Tasten erscheinen nun in <strong>logischer, sortierter Reihenfolge</strong> – kein Suchen mehr nötig.',
+                'Stark! Jetzt eliminieren wir Wegezeiten.<br><br><strong>Runde 4: Ergonomie – Wegezeiten minimieren</strong><br><br>Die Tasten sind zwar sauber gefiltert, aber die Wege für Augen und Finger sind noch viel zu lang. In dieser Runde rücken wir die Tastatur optimal zusammen und sortieren die aktiven Tasten in <strong>logischer Reihenfolge</strong>. Minimale Bewegung bedeutet maximale Geschwindigkeit und weniger Ermüdung.',
                 'Phase 4 starten', 4
             );
             setTimeout(() => showScreen('transition-screen'), 500);
@@ -1397,7 +1495,7 @@
             timePhase4 = duration;
             setTransitionScreen(
                 'Phase 4 beendet',
-                'Exzellent! Jetzt die Königsdisziplin.<br><br><strong>Runde 5: Pick-by-Light</strong><br><br>Die nächste zu drückende Taste <strong>leuchtet aktiv auf</strong>. Zero kognitive Belastung – maximale Prozessgeschwindigkeit.',
+                'Exzellent! Jetzt kommt die Königsdisziplin.<br><br><strong>Runde 5: Pick-by-Light – Die fehlerfreie Fabrik</strong><br><br>Wir digitalisieren Ihren Prozess. Das System denkt ab jetzt für Sie mit: Die Taste, die Sie als nächstes drücken müssen, <strong>leuchtet visuell auf</strong>. Suchzeiten sinken auf null, Denkfehler werden unmöglich. Das ist die perfekte Lean-Ausführung.',
                 'Phase 5 starten', 5
             );
             setTimeout(() => showScreen('transition-screen'), 500);
