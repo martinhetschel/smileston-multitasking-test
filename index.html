@@ -877,7 +877,7 @@
             <div style="height: 40px; flex-shrink: 0;"></div>
             <div id="start-qr" style="display:flex;justify-content:center;"></div>
             <p class="hint" style="font-size:0.7rem;color:#bbb;margin-top:6px;">Zum Teilen scannen</p>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v4.19</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v5.0</p>
         </div>
 
         <div id="transition-screen" class="screen">
@@ -908,7 +908,7 @@
             <button id="bonus-phase6-btn" class="btn" style="display:none;background:var(--anthracite);color:#fff;margin-bottom:10px;" onclick="showPhase6Preview()">🔥 BONUS-LEVEL STARTEN: Das Experiment</button>
             <button class="btn" style="background-color: var(--bg); color: var(--anthracite); border: 2px solid var(--anthracite);" onclick="location.reload()">Neuer Versuch</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v4.19</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v5.0</p>
         </div>
     </div>
 
@@ -1704,6 +1704,16 @@
         }
     }
 
+    function phaseStatsHTML(time, ext, err) {
+        const extTxt = ext === 0 ? 'keine' : ext + '× Überstunden';
+        const errColor = err === 0 ? 'var(--success)' : 'var(--error)';
+        return `<div style="background:var(--panel);border-left:4px solid var(--yellow);padding:10px 14px;margin-bottom:16px;font-size:0.88rem;line-height:1.9;text-align:left;">
+            <div>Zeit: <strong>${time.toFixed(1)} s</strong></div>
+            <div>Überstunden: <strong>${extTxt}</strong></div>
+            <div>Fehlgriffe: <strong style="color:${errColor}">${err}</strong></div>
+        </div>`;
+    }
+
     function setTransitionScreen(title, descHTML, btnText, nextPhase) {
         document.getElementById('transTitle').textContent = title;
         document.getElementById('transDesc').innerHTML = descHTML;
@@ -1726,13 +1736,13 @@
             if (gameJourney === 'lean') {
                 setTransitionScreen(
                     'Phase 1 beendet',
-                    'Ihre Zeit wurde erfasst.<br><br><strong>Runde 2: Der Flow-Effekt – Fokus statt Chaos</strong><br><br>Schluss mit dem permanenten Hin und Her! In dieser Runde organisieren wir Ihren Prozess neu. Sie arbeiten nicht mehr zeilenweise, sondern <strong>spaltenweise</strong>. Erst alle Zahlen, dann alle Buchstaben, dann alle Symbole. Ihr Gehirn muss nicht mehr ständig umrüsten – erleben Sie den Unterschied!',
+                    phaseStatsHTML(timePhase1, phase1Extensions, phase1Errors) + '<strong>Runde 2: Der Flow-Effekt – Fokus statt Chaos</strong><br><br>Schluss mit dem permanenten Hin und Her! In dieser Runde organisieren wir Ihren Prozess neu. Sie arbeiten nicht mehr zeilenweise, sondern <strong>spaltenweise</strong>. Erst alle Zahlen, dann alle Buchstaben, dann alle Symbole. Ihr Gehirn muss nicht mehr ständig umrüsten – erleben Sie den Unterschied!',
                     'Phase 2 starten', 2
                 );
             } else {
                 setTransitionScreen(
                     'Phase 1 beendet',
-                    'Ihre Zeit wurde erfasst.<br><br><strong>Runde 2: Der Flow-Effekt – Fokus statt Chaos</strong><br><br>Schluss mit dem permanenten Hin und Her! In dieser Runde organisieren wir Ihren Prozess neu. Sie arbeiten nicht mehr zeilenweise, sondern <strong>spaltenweise</strong>. Erst alle Zahlen, dann alle Buchstaben, dann alle Symbole. Ihr Gehirn muss nicht mehr ständig umrüsten – erleben Sie den Unterschied!',
+                    phaseStatsHTML(timePhase1, phase1Extensions, phase1Errors) + '<strong>Runde 2: Der Flow-Effekt – Fokus statt Chaos</strong><br><br>Schluss mit dem permanenten Hin und Her! In dieser Runde organisieren wir Ihren Prozess neu. Sie arbeiten nicht mehr zeilenweise, sondern <strong>spaltenweise</strong>. Erst alle Zahlen, dann alle Buchstaben, dann alle Symbole. Ihr Gehirn muss nicht mehr ständig umrüsten – erleben Sie den Unterschied!',
                     'Phase 2 starten', 2
                 );
             }
@@ -1742,7 +1752,7 @@
             timePhase2 = duration;
             setTransitionScreen(
                 'Phase 2 beendet',
-                'Sehr gut! Jetzt wenden wir Lean an.<br><br><strong>Runde 3: Ballast abwerfen (5S)</strong><br><br>Hand aufs Herz: Wie viel Zeit verbringen Sie im Alltag damit, nach Werkzeugen, Dokumenten oder den richtigen Tasten zu suchen? Ein überladener Arbeitsplatz ist der größte Produktivitätskiller. In dieser Runde wenden wir das fundamentale Lean-Werkzeug <strong>5S</strong> an. Wir bereinigen Ihre Arbeitsumgebung radikal von allem, was Sie ablenkt. Achten Sie mal darauf, wie schnell Ihre Augen das Ziel finden, wenn der Ballast plötzlich weg ist.',
+                phaseStatsHTML(timePhase2, phase2Extensions, phase2Errors) + '<strong>Runde 3: Ballast abwerfen (5S)</strong><br><br>Hand aufs Herz: Wie viel Zeit verbringen Sie im Alltag damit, nach Werkzeugen, Dokumenten oder den richtigen Tasten zu suchen? Ein überladener Arbeitsplatz ist der größte Produktivitätskiller. In dieser Runde wenden wir das fundamentale Lean-Werkzeug <strong>5S</strong> an. Wir bereinigen Ihre Arbeitsumgebung radikal von allem, was Sie ablenkt. Achten Sie mal darauf, wie schnell Ihre Augen das Ziel finden, wenn der Ballast plötzlich weg ist.',
                 'Phase 3 starten', 3
             );
             setTimeout(() => showScreen('transition-screen'), 500);
@@ -1751,7 +1761,7 @@
             timePhase3 = duration;
             setTransitionScreen(
                 'Phase 3 beendet',
-                'Stark! Jetzt optimieren wir das Layout.<br><br><strong>Runde 4: Wegezeiten minimieren (Ergonomie)</strong><br><br>Ihr Arbeitsplatz ist zwar sauber sortiert, aber bündeln Sie Ihre Kräfte schon optimal? Oft verschwenden wir unbemerkt Zeit durch zu lange Wege zwischen den einzelnen Arbeitsschritten. In dieser Runde optimieren wir das Layout. Achten Sie mal darauf, wie viel weniger Augen- und Fingerbewegung Sie gleich brauchen, um die Deadline locker einzuhalten.',
+                phaseStatsHTML(timePhase3, phase3Extensions, phase3Errors) + '<strong>Runde 4: Wegezeiten minimieren (Ergonomie)</strong><br><br>Ihr Arbeitsplatz ist zwar sauber sortiert, aber bündeln Sie Ihre Kräfte schon optimal? Oft verschwenden wir unbemerkt Zeit durch zu lange Wege zwischen den einzelnen Arbeitsschritten. In dieser Runde optimieren wir das Layout. Achten Sie mal darauf, wie viel weniger Augen- und Fingerbewegung Sie gleich brauchen, um die Deadline locker einzuhalten.',
                 'Phase 4 starten', 4
             );
             setTimeout(() => showScreen('transition-screen'), 500);
@@ -1760,7 +1770,7 @@
             timePhase4 = duration;
             setTransitionScreen(
                 'Phase 4 beendet',
-                'Exzellent! Jetzt kommt die Königsklasse.<br><br><strong>Runde 5: Die fehlerfreie Fabrik (Poka Yoke)</strong><br><br>Die Königsklasse der Evolution: Ein System, das Fehler im Keim erstickt. Ab jetzt übernimmt die Technik das Mitdenken für Sie, um Such- und Denkzeiten komplett zu eliminieren. Konzentrieren Sie sich in dieser letzten Runde rein auf den Takt – und erleben Sie, wie sich absolute Fehlerfreiheit anfühlt.',
+                phaseStatsHTML(timePhase4, phase4Extensions, phase4Errors) + '<strong>Runde 5: Die fehlerfreie Fabrik (Poka Yoke)</strong><br><br>Die Königsklasse der Evolution: Ein System, das Fehler im Keim erstickt. Ab jetzt übernimmt die Technik das Mitdenken für Sie, um Such- und Denkzeiten komplett zu eliminieren. Konzentrieren Sie sich in dieser letzten Runde rein auf den Takt – und erleben Sie, wie sich absolute Fehlerfreiheit anfühlt.',
                 'Phase 5 starten', 5
             );
             setTimeout(() => showScreen('transition-screen'), 500);
