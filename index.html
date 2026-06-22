@@ -878,7 +878,7 @@
             <div style="height: 40px; flex-shrink: 0;"></div>
             <div id="start-qr" style="display:flex;justify-content:center;"></div>
             <p class="hint" style="font-size:0.7rem;color:#bbb;margin-top:6px;">Zum Teilen scannen</p>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v5.2</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v5.3</p>
         </div>
 
         <div id="transition-screen" class="screen">
@@ -909,7 +909,7 @@
             <button id="bonus-phase6-btn" class="btn" style="display:none;background:var(--anthracite);color:#fff;margin-bottom:10px;" onclick="showPhase6Preview()">🔥 BONUS-LEVEL STARTEN: Das Experiment</button>
             <button class="btn" style="background-color: var(--bg); color: var(--anthracite); border: 2px solid var(--anthracite);" onclick="location.reload()">Neuer Versuch</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v5.2</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v5.3</p>
         </div>
     </div>
 
@@ -1047,12 +1047,25 @@
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let lastTickSec = -1;
 
-    // iOS: AudioContext muss synchron im User-Gesture-Handler entsperrt werden
-    ['touchstart', 'pointerdown'].forEach(evt =>
-        document.addEventListener(evt, () => {
-            if (audioCtx.state !== 'running') audioCtx.resume();
-        }, { once: true, passive: true })
-    );
+    // iOS: stiller AudioBuffer-Node + resume() beim ersten Touch entsperrt WebAudio zuverlässig
+    function unlockAudio() {
+        const buf = audioCtx.createBuffer(1, 1, 22050);
+        const src = audioCtx.createBufferSource();
+        src.buffer = buf;
+        src.connect(audioCtx.destination);
+        src.start(0);
+        audioCtx.resume();
+        document.removeEventListener('touchstart', unlockAudio);
+        document.removeEventListener('touchend',   unlockAudio);
+    }
+    document.addEventListener('touchstart', unlockAudio, { passive: true });
+    document.addEventListener('touchend',   unlockAudio, { passive: true });
+
+    // Pinch-to-Zoom + Gesture-Zoom verhindern (iOS ignoriert user-scalable=no seit iOS 10)
+    document.addEventListener('touchmove', function(e) {
+        if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+    document.addEventListener('gesturestart', function(e) { e.preventDefault(); }, false);
 
     async function playSound(type) {
         try { if (audioCtx.state === 'suspended') await audioCtx.resume(); } catch(e) { return; }
