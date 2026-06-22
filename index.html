@@ -871,14 +871,17 @@
                 <strong>⏱ Achtung:</strong> Sie haben pro Runde exakt 30 Sekunden Zeit. Läuft die Deadline ab, ist der Kundenauftrag gefährdet – und Sie müssen eine ungeplante Extraschicht einlegen, um den Prozess abzuschließen.
             </div>
 
-            <p style="font-size: 0.88rem; color: #555; margin: 0 0 16px 0; width: 100%; max-width: 320px;">🔔 Tipp: Bitte Ton einschalten für Prozess-Feedback.</p>
+            <div style="display:flex;align-items:center;gap:10px;width:100%;max-width:320px;margin-bottom:16px;">
+                <span style="font-size:0.88rem;color:#555;">🔔 Ton einschalten für Prozess-Feedback.</span>
+                <button type="button" id="audio-test-btn" onclick="testAudio()" style="flex-shrink:0;padding:6px 12px;font-size:0.8rem;font-weight:bold;background:var(--panel);border:2px solid var(--anthracite);border-radius:4px;cursor:pointer;white-space:nowrap;">▶ Ton testen</button>
+            </div>
 
             <button class="btn" onclick="startGame(1)">Phase 1 starten</button>
 
             <div style="height: 40px; flex-shrink: 0;"></div>
             <div id="start-qr" style="display:flex;justify-content:center;"></div>
             <p class="hint" style="font-size:0.7rem;color:#bbb;margin-top:6px;">Zum Teilen scannen</p>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v5.3</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v5.4</p>
         </div>
 
         <div id="transition-screen" class="screen">
@@ -909,7 +912,7 @@
             <button id="bonus-phase6-btn" class="btn" style="display:none;background:var(--anthracite);color:#fff;margin-bottom:10px;" onclick="showPhase6Preview()">🔥 BONUS-LEVEL STARTEN: Das Experiment</button>
             <button class="btn" style="background-color: var(--bg); color: var(--anthracite); border: 2px solid var(--anthracite);" onclick="location.reload()">Neuer Versuch</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v5.3</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v5.4</p>
         </div>
     </div>
 
@@ -1005,6 +1008,22 @@
         scrollToStartBtn();
     }
 
+    async function testAudio() {
+        const btn = document.getElementById('audio-test-btn');
+        btn.textContent = '…';
+        unlockAudio();
+        try {
+            await playSound('bell');
+            btn.textContent = '✓ Ton aktiv';
+            btn.style.borderColor = 'var(--success)';
+            btn.style.color = 'var(--success)';
+        } catch(e) {
+            btn.textContent = '✗ Kein Ton';
+            btn.style.borderColor = 'var(--error)';
+            btn.style.color = 'var(--error)';
+        }
+    }
+
     function selectJourney(journey) {
         gameJourney = journey;
         document.querySelectorAll('.mode-btn[data-journey]').forEach(btn => {
@@ -1068,7 +1087,8 @@
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); }, false);
 
     async function playSound(type) {
-        try { if (audioCtx.state === 'suspended') await audioCtx.resume(); } catch(e) { return; }
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
+        if (audioCtx.state !== 'running') throw new Error('AudioContext not running');
         const osc = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
         osc.connect(gainNode);
