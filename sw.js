@@ -1,4 +1,4 @@
-const CACHE = 'smilestone-v3';
+const CACHE = 'smilestone-v4';
 const ASSETS = [
     './',
     './index.html',

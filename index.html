@@ -368,6 +368,10 @@
             max-width: 320px;
         }
 
+        body, #app-container, .content-area, #game-screen {
+            overscroll-behavior: none;
+        }
+
         #start-screen { text-align: left; }
 
         #game-screen {
@@ -881,7 +885,7 @@
             <div style="height: 40px; flex-shrink: 0;"></div>
             <div id="start-qr" style="display:flex;justify-content:center;"></div>
             <p class="hint" style="font-size:0.7rem;color:#bbb;margin-top:6px;">Zum Teilen scannen</p>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v5.4</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v5.5</p>
         </div>
 
         <div id="transition-screen" class="screen">
@@ -912,7 +916,7 @@
             <button id="bonus-phase6-btn" class="btn" style="display:none;background:var(--anthracite);color:#fff;margin-bottom:10px;" onclick="showPhase6Preview()">🔥 BONUS-LEVEL STARTEN: Das Experiment</button>
             <button class="btn" style="background-color: var(--bg); color: var(--anthracite); border: 2px solid var(--anthracite);" onclick="location.reload()">Neuer Versuch</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v5.4</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v5.5</p>
         </div>
     </div>
 
@@ -1074,11 +1078,13 @@
         src.connect(audioCtx.destination);
         src.start(0);
         audioCtx.resume();
-        document.removeEventListener('touchstart', unlockAudio);
-        document.removeEventListener('touchend',   unlockAudio);
+        document.removeEventListener('touchstart', unlockAudio, { capture: true });
+        document.removeEventListener('touchend',   unlockAudio, { capture: true });
+        document.removeEventListener('click',      unlockAudio, { capture: true });
     }
-    document.addEventListener('touchstart', unlockAudio, { passive: true });
-    document.addEventListener('touchend',   unlockAudio, { passive: true });
+    document.addEventListener('touchstart', unlockAudio, { passive: true, capture: true });
+    document.addEventListener('touchend',   unlockAudio, { passive: true, capture: true });
+    document.addEventListener('click',      unlockAudio, { passive: true, capture: true });
 
     // Pinch-to-Zoom + Gesture-Zoom verhindern (iOS ignoriert user-scalable=no seit iOS 10)
     document.addEventListener('touchmove', function(e) {
@@ -1185,6 +1191,7 @@
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
+        window.scrollTo(0, 0);
         const contentArea = document.querySelector('.content-area');
         if (contentArea) {
             contentArea.scrollTop = 0;
@@ -1196,6 +1203,11 @@
             const gs = document.getElementById('game-screen');
             gs.style.top    = topPx + 'px';
             gs.style.height = (window.innerHeight - topPx) + 'px';
+            aktiviereScreenWakeLock();
+        } else if (id === 'end-screen') {
+            aktiviereScreenWakeLock();
+        } else {
+            deaktiviereScreenWakeLock();
         }
     }
 
@@ -1977,8 +1989,19 @@
         window.visualViewport.addEventListener('resize', handleViewportResize);
     }
 
+    // --- Screen Wake Lock ---
+    let aktivWakeLock = null;
+    async function aktiviereScreenWakeLock() {
+        if ('wakeLock' in navigator) {
+            try { aktivWakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+        }
+    }
+    function deaktiviereScreenWakeLock() {
+        if (aktivWakeLock) { aktivWakeLock.release(); aktivWakeLock = null; }
+    }
+
     // --- Viewport-Fix: Force Reflow beim App-Wechsel (dvh Resume Bug) ---
-    document.addEventListener('visibilitychange', () => {
+    document.addEventListener('visibilitychange', async () => {
         if (document.visibilityState === 'visible') {
             window.scrollTo(0, 0);
             const el = document.getElementById('app-container');
@@ -1986,8 +2009,17 @@
                 el.style.height = '99dvh';
                 requestAnimationFrame(() => { el.style.height = '100dvh'; });
             }
+            if (aktivWakeLock !== null) await aktiviereScreenWakeLock();
         }
     });
+
+    // --- Double-Tap-Zoom bei schnellem Tippen verhindern ---
+    let letzterTouchTakt = 0;
+    document.addEventListener('touchend', function(e) {
+        const jetzt = performance.now();
+        if (jetzt - letzterTouchTakt <= 300) e.preventDefault();
+        letzterTouchTakt = jetzt;
+    }, { passive: false });
 
     // --- QR code for current page ---
     window.addEventListener('load', () => {
