@@ -885,7 +885,7 @@
             <div style="height: 40px; flex-shrink: 0;"></div>
             <div id="start-qr" style="display:flex;justify-content:center;"></div>
             <p class="hint" style="font-size:0.7rem;color:#bbb;margin-top:6px;">Zum Teilen scannen</p>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v5.5</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v5.6</p>
         </div>
 
         <div id="transition-screen" class="screen">
@@ -916,7 +916,7 @@
             <button id="bonus-phase6-btn" class="btn" style="display:none;background:var(--anthracite);color:#fff;margin-bottom:10px;" onclick="showPhase6Preview()">🔥 BONUS-LEVEL STARTEN: Das Experiment</button>
             <button class="btn" style="background-color: var(--bg); color: var(--anthracite); border: 2px solid var(--anthracite);" onclick="location.reload()">Neuer Versuch</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v5.5</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v5.6</p>
         </div>
     </div>
 
@@ -1016,15 +1016,17 @@
         const btn = document.getElementById('audio-test-btn');
         btn.textContent = '…';
         unlockAudio();
-        try {
-            await playSound('bell');
-            btn.textContent = '✓ Ton aktiv';
-            btn.style.borderColor = 'var(--success)';
-            btn.style.color = 'var(--success)';
-        } catch(e) {
+        // resume() ist async – kurz warten bis der Context-State sich gesetzt hat
+        await new Promise(r => setTimeout(r, 150));
+        if (!audioCtx || audioCtx.state !== 'running') {
             btn.textContent = '✗ Kein Ton';
             btn.style.borderColor = 'var(--error)';
             btn.style.color = 'var(--error)';
+        } else {
+            playSound('bell');
+            btn.textContent = '✓ Ton aktiv';
+            btn.style.borderColor = 'var(--success)';
+            btn.style.color = 'var(--success)';
         }
     }
 
@@ -1067,17 +1069,26 @@
     const DEADLINE_DURATION = 30000;
 
     // --- Web Audio API ---
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Lazy init: AudioContext darf auf iOS NICHT beim Script-Load erstellt werden,
+    // sondern erst innerhalb einer User-Geste – sonst bleibt es dauerhaft suspended.
+    let audioCtx = null;
     let lastTickSec = -1;
 
-    // iOS: stiller AudioBuffer-Node + resume() beim ersten Touch entsperrt WebAudio zuverlässig
     function unlockAudio() {
-        const buf = audioCtx.createBuffer(1, 1, 22050);
-        const src = audioCtx.createBufferSource();
-        src.buffer = buf;
-        src.connect(audioCtx.destination);
-        src.start(0);
-        audioCtx.resume();
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state !== 'running') {
+            audioCtx.resume().then(() => {
+                try {
+                    const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+                    const src = audioCtx.createBufferSource();
+                    src.buffer = buf;
+                    src.connect(audioCtx.destination);
+                    src.start(0);
+                } catch(e) {}
+            });
+        }
         document.removeEventListener('touchstart', unlockAudio, { capture: true });
         document.removeEventListener('touchend',   unlockAudio, { capture: true });
         document.removeEventListener('click',      unlockAudio, { capture: true });
@@ -1093,8 +1104,11 @@
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); }, false);
 
     async function playSound(type) {
-        if (audioCtx.state === 'suspended') await audioCtx.resume();
-        if (audioCtx.state !== 'running') throw new Error('AudioContext not running');
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') {
+            try { await audioCtx.resume(); } catch(e) { return; }
+        }
+        if (audioCtx.state !== 'running') return;
         const osc = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
         osc.connect(gainNode);
@@ -1629,7 +1643,7 @@
     }
 
     function runCountdown(callback) {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         countdownOverlayEl.classList.add('active');
         inputLocked = true;
         const sequence = [5, 4, 3, 2, 1];
