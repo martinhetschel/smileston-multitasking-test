@@ -885,7 +885,7 @@
             <div style="height: 40px; flex-shrink: 0;"></div>
             <div id="start-qr" style="display:flex;justify-content:center;"></div>
             <p class="hint" style="font-size:0.7rem;color:#bbb;margin-top:6px;">Zum Teilen scannen</p>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v5.6</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 8px 0 0; padding-bottom: 24px;">v5.7</p>
         </div>
 
         <div id="transition-screen" class="screen">
@@ -916,7 +916,7 @@
             <button id="bonus-phase6-btn" class="btn" style="display:none;background:var(--anthracite);color:#fff;margin-bottom:10px;" onclick="showPhase6Preview()">🔥 BONUS-LEVEL STARTEN: Das Experiment</button>
             <button class="btn" style="background-color: var(--bg); color: var(--anthracite); border: 2px solid var(--anthracite);" onclick="location.reload()">Neuer Versuch</button>
             <div style="height: 60px; flex-shrink: 0;"></div>
-            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v5.6</p>
+            <p style="font-size: 0.75rem; color: #aaa; margin: 0; padding-bottom: 24px;">v5.7</p>
         </div>
     </div>
 
@@ -1293,12 +1293,17 @@
         } else if (phase === 2) {
             buildStaticKeyboard();
         } else if (phase === 3) {
+            // Pick-by-Light: alle Tasten sichtbar, nächste leuchtet auf
+            buildStaticKeyboard();
+        } else if (phase === 4) {
+            // 5S: alle Tasten sichtbar, aber nur aktive Spalte aktiv
             buildStaticKeyboard();
             updateKeyboardFor5S();
+        } else if (phase === 5) {
+            // Ergonomie: sortiertes, kompaktes Layout
+            buildSortedKeyboard();
         } else if (phase === 6) {
             buildPhase6Keyboard();
-        } else {
-            buildSortedKeyboard();
         }
 
         requestAnimationFrame(() => {
@@ -1307,7 +1312,7 @@
             runCountdown(() => {
                 startTime = performance.now();
                 startDeadlineTimer();
-                if (phase === 5) highlightNextKey();
+                if (phase === 3) highlightNextKey();
                 if (phase === 6) highlightNextKey();
             });
         });
@@ -1754,18 +1759,21 @@
 
             if (currentPhase >= 2 && columnFinished && activeCol < COLS) {
                 if (currentPhase === 3) {
-                    updateKeyboardFor5S();
-                } else if (currentPhase === 4) {
-                    buildSortedKeyboard();
-                } else if (currentPhase === 5) {
-                    buildSortedKeyboard();
+                    // Pick-by-Light: neue Spalte → Tastatur neu aufbauen + Highlight
+                    buildStaticKeyboard();
                     highlightNextKey();
+                } else if (currentPhase === 4) {
+                    // 5S: neue Spalte → nur aktive Spalte freischalten
+                    updateKeyboardFor5S();
+                } else if (currentPhase === 5) {
+                    // Ergonomie: neue Spalte → sortiertes Layout neu aufbauen
+                    buildSortedKeyboard();
                 } else if (currentPhase === 6) {
                     buildPhase6Keyboard();
                     highlightNextKey();
                 }
                 triggerSuccessOverlay(activeCol);
-            } else if (currentPhase === 5 || currentPhase === 6) {
+            } else if (currentPhase === 3 || currentPhase === 6) {
                 highlightNextKey();
             }
         }
@@ -1819,7 +1827,7 @@
             timePhase2 = duration;
             setTransitionScreen(
                 'Phase 2 beendet',
-                phaseStatsHTML(timePhase2, phase2Extensions, phase2Errors) + '<strong>Runde 3: Ballast abwerfen (5S)</strong><br><br>Hand aufs Herz: Wie viel Zeit verbringen Sie im Alltag damit, nach Werkzeugen, Dokumenten oder den richtigen Tasten zu suchen? Ein überladener Arbeitsplatz ist der größte Produktivitätskiller. In dieser Runde wenden wir das fundamentale Lean-Werkzeug <strong>5S</strong> an. Wir bereinigen Ihre Arbeitsumgebung radikal von allem, was Sie ablenkt. Achten Sie mal darauf, wie schnell Ihre Augen das Ziel finden, wenn der Ballast plötzlich weg ist.',
+                phaseStatsHTML(timePhase2, phase2Extensions, phase2Errors) + '<strong>Runde 3: Technologie hilft (Pick-by-Light)</strong><br><br>Was, wenn das System Ihnen jeden Schritt vorgibt? In dieser Runde leuchtet die nächste Taste automatisch auf – alle Tasten bleiben sichtbar, aber die Technik übernimmt das Suchen für Sie. Kein Zögern, null kognitive Last. Erleben Sie, wie schnell Sie werden, wenn die Maschine das Denken übernimmt.',
                 'Phase 3 starten', 3
             );
             setTimeout(() => showScreen('transition-screen'), 500);
@@ -1828,7 +1836,7 @@
             timePhase3 = duration;
             setTransitionScreen(
                 'Phase 3 beendet',
-                phaseStatsHTML(timePhase3, phase3Extensions, phase3Errors) + '<strong>Runde 4: Wegezeiten minimieren (Ergonomie)</strong><br><br>Ihr Arbeitsplatz ist zwar sauber sortiert, aber bündeln Sie Ihre Kräfte schon optimal? Oft verschwenden wir unbemerkt Zeit durch zu lange Wege zwischen den einzelnen Arbeitsschritten. In dieser Runde optimieren wir das Layout. Achten Sie mal darauf, wie viel weniger Augen- und Fingerbewegung Sie gleich brauchen, um die Deadline locker einzuhalten.',
+                phaseStatsHTML(timePhase3, phase3Extensions, phase3Errors) + '<strong>Runde 4: Ballast abwerfen (5S)</strong><br><br>Beeindruckend – aber braucht es wirklich Technologie für dieses Ergebnis? In dieser Runde kommt das fundamentale Lean-Werkzeug <strong>5S</strong> zum Einsatz: Alles, was Sie nicht benötigen, verschwindet einfach. Kein Blinken, kein System – nur Klarheit. Achten Sie darauf, wie schnell Ihre Augen das Ziel finden, wenn der Ballast weg ist.',
                 'Phase 4 starten', 4
             );
             setTimeout(() => showScreen('transition-screen'), 500);
@@ -1837,7 +1845,7 @@
             timePhase4 = duration;
             setTransitionScreen(
                 'Phase 4 beendet',
-                phaseStatsHTML(timePhase4, phase4Extensions, phase4Errors) + '<strong>Runde 5: Die fehlerfreie Fabrik (Poka Yoke)</strong><br><br>Die Königsklasse der Evolution: Ein System, das Fehler im Keim erstickt. Ab jetzt übernimmt die Technik das Mitdenken für Sie, um Such- und Denkzeiten komplett zu eliminieren. Konzentrieren Sie sich in dieser letzten Runde rein auf den Takt – und erleben Sie, wie sich absolute Fehlerfreiheit anfühlt.',
+                phaseStatsHTML(timePhase4, phase4Extensions, phase4Errors) + '<strong>Runde 5: Wegezeiten minimieren (Ergonomie)</strong><br><br>Aufgeräumt – und jetzt noch einen Schritt weiter. Oft verschwenden wir unbemerkt Zeit durch zu lange Wege zwischen den Arbeitsschritten. In dieser letzten Runde optimieren wir das Layout: Die verbleibenden Tasten rücken zusammen. Beobachten Sie, wie wenig Bewegung Sie noch brauchen.',
                 'Phase 5 starten', 5
             );
             setTimeout(() => showScreen('transition-screen'), 500);
@@ -1893,7 +1901,7 @@
             : [phase1Errors, phase2Errors];
         const phaseCount = isLean ? 5 : 2;
         const phaseLabels = isLean
-            ? ['Zeilen / Multitasking', 'Flow (spaltenweise)', '5S-Modus', 'Ergonomie', 'Pick-by-Light']
+            ? ['Zeilen / Multitasking', 'Flow (spaltenweise)', 'Pick-by-Light', '5S-Modus', 'Ergonomie']
             : ['Zeilen / Multitasking', 'Spalten / Flow'];
         const phaseTimes = isLean
             ? [timePhase1, timePhase2, timePhase3, timePhase4, timePhase5]
@@ -1919,7 +1927,7 @@
 
         // --- Balkendiagramm ---
         const chartLabels = isLean
-            ? ['Multitask.', 'Flow', '5S', 'Ergonomie', 'P-by-Light']
+            ? ['Multitask.', 'Flow', 'P-by-Light', '5S', 'Ergonomie']
             : ['Multitask.', 'Flow'];
         let html = buildChart(phaseTimes, chartLabels);
 
@@ -1954,9 +1962,9 @@
         let explain = 'Warum waren Sie im Vergleich zu Runde 1 so viel schneller? Multitasking kostet enorme Energie, da das Gehirn ständig "umrüsten" muss.';
         if (isLean) {
             explain += ' In Runde 2 (Flow) haben Sie das Raster spaltenweise ausgefüllt – kein Kontextwechsel, kein Umschalten der Aufmerksamkeit.';
-            explain += ' In Runde 3 (5S-Modus) haben wir die 5S-Methode angewendet: nur die Werkzeuge, die Sie gerade brauchen – kein Suchen, kein Ablenken.';
-            explain += ' In Runde 4 (Ergonomie) wurden die aktiven Tasten in logischer Reihenfolge angeordnet – das visuelle Suchen entfiel komplett.';
-            explain += ' In Runde 5 (Pick-by-Light) leuchtete die nächste Taste aktiv auf: Zero kognitive Belastung, maximale Prozessgeschwindigkeit.';
+            explain += ' In Runde 3 (Pick-by-Light) leuchtete die nächste Taste auf: Technologie übernimmt das Suchen – bei voller Tastatur.';
+            explain += ' In Runde 4 (5S) verschwand alles Überflüssige: kein Blinken, keine Technik – nur Klarheit. Genauso schnell wie mit Technologie?';
+            explain += ' In Runde 5 (Ergonomie) rückten die Tasten zusammen: minimale Bewegung, maximale Effizienz durch konsequente Prozessgestaltung.';
         } else {
             explain += ' In Runde 2 haben wir das Multitasking eliminiert: spaltenweises Arbeiten, volle Tastatur – aber kein ständiges Umschalten der Aufmerksamkeit mehr.';
         }
