@@ -1,10 +1,10 @@
-const CACHE = 'smilestone-v6';
+const CACHE = 'smilestone-v6.0';
 const ASSETS = [
     './',
     './index.html',
     './kommunizieren.html',
-    './icon-192.png',
-    './icon-512.png',
+    './icon-192-v6.0.png',
+    './icon-512-v6.0.png',
     './manifest.json',
 ];
 
