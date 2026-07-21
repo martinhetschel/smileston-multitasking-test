@@ -671,14 +671,14 @@
         }
 
         @keyframes pickLight {
-            0%, 100% { background-color: var(--yellow); border-color: var(--anthracite); }
-            50%       { background-color: #ffd04d;       border-color: var(--yellow); }
+            0%, 100% { background-color: #1b8a3e; border-color: var(--anthracite); }
+            50%       { background-color: #4fd672; border-color: #1b8a3e; }
         }
 
         .key.pick-by-light {
-            background-color: var(--yellow);
+            background-color: #1b8a3e;
             border-color: var(--anthracite);
-            color: var(--anthracite);
+            color: #fff;
             animation: pickLight 0.9s ease-in-out infinite;
         }
 
@@ -1056,6 +1056,7 @@
     let windowStart = 0;
     let scrollAnimFrame = null;
 
+    let symbolPressOrder = [];
     let phase1Extensions = 0;
     let phase2Extensions = 0;
     let phase3Extensions = 0;
@@ -1243,6 +1244,7 @@
         if (phase === 1) {
             LETTERS_FULL = buildLettersFull(gameMode);
             REQUIRED_LETTERS = LETTERS_FULL.slice(START_ROW);
+            symbolPressOrder = [];
             phase1Extensions = 0;
             phase2Extensions = 0;
             phase3Extensions = 0;
@@ -1485,7 +1487,7 @@
         const sortedSets = [
             REQUIRED_NUMBERS.slice().sort((a, b) => parseInt(a) - parseInt(b)),
             [...REQUIRED_LETTERS],
-            [...REQUIRED_EMOJIS],
+            [...symbolPressOrder, ...REQUIRED_EMOJIS.filter(e => !symbolPressOrder.includes(e))],
         ];
         const sortedActive = sortedSets[activeCol];
         const otherKeys = shuffle(
@@ -1691,6 +1693,9 @@
 
         if (val === expected) {
             gridData[activeRow][activeCol] = val;
+            if (activeCol === 2 && !symbolPressOrder.includes(val)) {
+                symbolPressOrder.push(val);
+            }
             playSound('success');
 
             btnElement.classList.remove('pick-by-light');
