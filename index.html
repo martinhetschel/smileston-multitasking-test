@@ -7,10 +7,10 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="MT-Test">
+    <meta name="apple-mobile-web-app-title" content="FlowShift">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192-v6.0.png">
-    <title>Smilestone Multitasking Test</title>
+    <title>Smilestone FlowShift – The Lean Excellence Simulation</title>
     <style>
         :root {
             --yellow: #FFB700;
@@ -1972,7 +1972,7 @@
         explainEl2.innerText = explain;
 
         // --- Share-Text ---
-        let share = `Ich habe den Smilestone Konzentrationstest gemacht:\n\nModus: ${modeLabel}\n`;
+        let share = `Ich habe Smilestone FlowShift – The Lean Excellence Simulation gemacht:\n\nModus: ${modeLabel}\n`;
         for (let p = 0; p < phaseCount; p++) {
             share += `Phase ${p+1}: ${phaseTimes[p].toFixed(1)} s\n`;
         }
@@ -1985,7 +1985,7 @@
         share += `\nVersuche es doch auch: ${window.location.origin}${window.location.pathname}`;
 
         document.getElementById('share-wa').href   = `https://api.whatsapp.com/send?text=${encodeURIComponent(share)}`;
-        document.getElementById('share-mail').href = `mailto:?subject=${encodeURIComponent('Smilestone Konzentrationstest')}&body=${encodeURIComponent(share)}`;
+        document.getElementById('share-mail').href = `mailto:?subject=${encodeURIComponent('Smilestone FlowShift – The Lean Excellence Simulation')}&body=${encodeURIComponent(share)}`;
     }
 
     function handleViewportResize() {

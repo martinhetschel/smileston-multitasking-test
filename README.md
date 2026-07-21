@@ -1,4 +1,4 @@
-# Smilestone Multitasking Test
+# Smilestone FlowShift – The Lean Excellence Simulation
 
 Interaktiver Trainings-Test, der zeigt, wie viel schneller fokussiertes Arbeiten gegenüber ständigem Aufgabenwechsel ist. Ein Raster aus Zahlen, Buchstaben und Symbolen wird per virtuellem Keyboard ausgefüllt – in verschiedenen Phasen mit steigendem Unterstützungsgrad.
 
